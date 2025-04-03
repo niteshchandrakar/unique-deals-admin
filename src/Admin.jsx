@@ -136,7 +136,6 @@ function Admin() {
         });
       if (updateResponse.status === 200) {
         showModal("Data Update Ho gaya😍😍😍");
-        console.log(orderData);
         fetchOrderData();
       } else {
         showModal("kuchh problem hai nitesh ko message kar lo");
