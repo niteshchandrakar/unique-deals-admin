@@ -180,6 +180,11 @@ function Admin() {
               placeholder="Enter Order ID"
               value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  fetchOrderData();
+                }
+              }}
               style={{ paddingRight: "40px", width: "100%" }} // Extra padding to prevent text from overlapping button
             />
             <button
