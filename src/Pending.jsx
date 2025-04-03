@@ -49,7 +49,11 @@ function Pending() {
       });
       const rows = response.result.values || [];
       const filteredOrders = rows
-        .filter((row) => row[2]?.toLowerCase() === mediator.toLowerCase())
+        .filter(
+          (row) =>
+            row[2]?.toLowerCase() === mediator.toLowerCase() &&
+            row[7]?.toLowerCase() !== "a complete"
+        )
         .map((row) => ({
           order_id: row[0],
           refund_form_date: row[1],
