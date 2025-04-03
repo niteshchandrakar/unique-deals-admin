@@ -50,7 +50,7 @@ function Admin() {
 
   const fetchOrderData = async () => {
     if (!searchId) return showModal("Please enter an Order ID.");
-
+    setOrderData(null);
     setIsLoading(true);
     try {
       const sheets = ["Sheet1", "Completed"];
@@ -58,7 +58,7 @@ function Admin() {
       for (const sheet of sheets) {
         const response = await gapi.client.sheets.spreadsheets.values.get({
           spreadsheetId: SHEET_ID,
-          range: `${sheet}!A2:H`,
+          range: `${sheet}!A2:I`,
         });
         const rows = response.result.values || [];
         const matchingOrders = rows.filter((row) => row[0] === searchId);
@@ -81,6 +81,7 @@ function Admin() {
           "less_amount",
           "paid_amount",
           "payment",
+          "notes",
         ];
         const orderObject = keys.reduce(
           (acc, key, index) => ({ ...acc, [key]: foundOrders[0][index] || "" }),
@@ -115,7 +116,7 @@ function Admin() {
       const updateResponse =
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
-          range: `Sheet1!A${actualRowNumber}:H${actualRowNumber}`,
+          range: `Sheet1!A${actualRowNumber}:I${actualRowNumber}`,
           valueInputOption: "USER_ENTERED",
           resource: {
             values: [
@@ -128,13 +129,14 @@ function Admin() {
                 orderData.less_amount,
                 orderData.paid_amount,
                 orderData.payment,
+                orderData.notes,
               ],
             ],
           },
         });
       if (updateResponse.status === 200) {
         showModal("Data Update Ho gaya😍😍😍");
-
+        console.log(orderData);
         fetchOrderData();
       } else {
         showModal("kuchh problem hai nitesh ko message kar lo");
