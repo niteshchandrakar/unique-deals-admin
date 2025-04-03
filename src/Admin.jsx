@@ -168,13 +168,41 @@ function Admin() {
         </button>
       ) : (
         <div>
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              position: "relative",
+            }}
+          >
             <input
               type="text"
               placeholder="Enter Order ID"
               value={searchId}
               onChange={(e) => setSearchId(e.target.value)}
+              style={{ paddingRight: "40px", width: "100%" }} // Extra padding to prevent text from overlapping button
             />
+            <button
+              onClick={async () => {
+                const text = await navigator.clipboard.readText(); // Read from clipboard
+                setSearchId(text);
+              }}
+              style={{
+                position: "absolute",
+                right: "20%",
+                top: "50%",
+                transform: "translateY(-50%)",
+                padding: "5px",
+                fontSize: "12px",
+                cursor: "pointer",
+                border: "none",
+                background: "#ddd",
+                borderRadius: "5px",
+                width: "10%",
+              }}
+            >
+              📋
+            </button>
             <button
               style={{ width: "20%" }}
               className="search-btn"
@@ -184,6 +212,7 @@ function Admin() {
               Search
             </button>
           </div>
+
           {modalMessage && <div className="modal">{modalMessage}</div>}
           {orderData && (
             <div className="order-details">
