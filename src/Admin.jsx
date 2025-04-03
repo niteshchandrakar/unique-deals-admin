@@ -27,7 +27,12 @@ function Admin() {
           discoveryDocs: [DISCOVERY_DOC],
           scope: SCOPE,
         })
-        .then(() => console.log("Google API initialized"))
+        .then(() => {
+          const authInstance = gapi.auth2.getAuthInstance();
+          if (authInstance.isSignedIn.get()) {
+            setIsAuthenticated(true); // Persist authentication state
+          }
+        })
         .catch((error) => showModal("Google API Error: " + error.message));
     };
     gapi.load("client:auth2", start);
@@ -61,12 +66,10 @@ function Admin() {
       }
 
       if (foundOrders.length === 0) {
-        showModal("No order found with the given ID.");
+        showModal("Order Id Nahi Mila❌❌");
         setOrderData(null);
       } else if (foundOrders.length > 1) {
-        showModal(
-          "Multiple orders found with the same ID. Please refine your search."
-        );
+        showModal("Ye Order id sheet me kai baar hai🚫🚫");
         setOrderData(null);
       } else {
         const keys = [
@@ -84,9 +87,10 @@ function Admin() {
           {}
         );
         setOrderData(orderObject);
+        showModal("Order Mil Gaya✅✅");
       }
     } catch (error) {
-      showModal("Failed to fetch order data. Please try again.");
+      showModal("kuchh problem hai nitesh ko message kar lo");
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +109,7 @@ function Admin() {
       if (!rows) return showModal("No data found.");
 
       const rowIndex = rows.findIndex((row) => row[0] === orderData.order_id);
-      if (rowIndex === -1) return showModal("Order ID not found.");
+      if (rowIndex === -1) return showModal("Order id ni mila❌❌");
 
       const actualRowNumber = rowIndex + 2;
       const updateResponse =
@@ -129,16 +133,14 @@ function Admin() {
           },
         });
       if (updateResponse.status === 200) {
-        showModal("Order updated successfully!");
-        setTimeout(() => {
-          showModal("Check Data is Updated Or Not");
-        }, 2000);
+        showModal("Data Update Ho gaya😍😍😍");
+
         fetchOrderData();
       } else {
-        showModal("Error updating order.");
+        showModal("kuchh problem hai nitesh ko message kar lo");
       }
     } catch (error) {
-      showModal("Error updating order: " + error.message);
+      showModal("kuchh problem hai nitesh ko message kar lo " + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -179,7 +181,7 @@ function Admin() {
               onClick={fetchOrderData}
               disabled={isLoading}
             >
-              {isLoading ? "Searching..." : "Search"}
+              Search
             </button>
           </div>
           {modalMessage && <div className="modal">{modalMessage}</div>}
@@ -238,6 +240,12 @@ function Admin() {
                                 ? dayjs(value).format("YYYY-MM-DD")
                                 : value
                             }
+                            onChange={(e) =>
+                              setOrderData({
+                                ...orderData,
+                                [key]: e.target.value,
+                              })
+                            }
                             readOnly={["order_id", "paid_amount"].includes(key)}
                           />
                         )}
@@ -251,10 +259,15 @@ function Admin() {
                 onClick={handleUpdateOrder}
                 disabled={isLoading}
               >
-                {isLoading ? "Updating..." : "Update Order"}
+                Update Order
               </button>
             </div>
           )}
+        </div>
+      )}
+      {isLoading && (
+        <div className="loading-overlay">
+          <div className="spinner"></div>
         </div>
       )}
     </div>
