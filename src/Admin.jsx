@@ -127,7 +127,7 @@ function Admin() {
                 orderData.whatsapp_number,
                 orderData.order_amount,
                 orderData.less_amount,
-                orderData.paid_amount,
+                "",
                 orderData.payment,
                 orderData.notes,
               ],
