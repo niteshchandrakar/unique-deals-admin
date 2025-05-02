@@ -129,21 +129,21 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 1,
+        zIndex: 10000,
       }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
           position: "fixed",
-          top: "40%",
+          top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
           backgroundColor: "white",
           padding: "20px",
           borderRadius: "10px",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          zIndex: 1,
+          zIndex: 1000,
           minHeight: "65%",
           minWidth: "80%",
         }}
