@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { gapi } from "gapi-script";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
 
@@ -8,7 +8,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
   const [orderData, setOrderData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const fetchOrderData = async () => {
+  const fetchOrderData = useCallback(async () => {
     if (!searchId) return showModal("Please enter an Order ID.");
     setOrderData(null);
     setIsLoading(true);
@@ -55,7 +55,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [searchId]); // only depends on searchId
 
   const handleUpdateOrder = async () => {
     if (!orderData) return;
@@ -114,7 +114,8 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
   };
   useEffect(() => {
     fetchOrderData();
-  }, [searchId]);
+  }, [fetchOrderData]);
+
   return (
     <div
       onClick={() => setShowEditModal(false)} // triggers when clicking outside
