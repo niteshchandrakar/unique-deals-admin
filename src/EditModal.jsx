@@ -129,7 +129,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 10000,
+        zIndex: 10,
       }}
     >
       <div
@@ -143,7 +143,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
           padding: "20px",
           borderRadius: "10px",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          zIndex: 1000,
+          zIndex: 100,
           minHeight: "65%",
           minWidth: "80%",
         }}
@@ -237,7 +237,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
         )}
       </div>
       {modalMessage && (
-        <div style={{ zIndex: 20 }} className="modal">
+        <div style={{ zIndex: 1000 }} className="modal">
           {modalMessage}
         </div>
       )}
