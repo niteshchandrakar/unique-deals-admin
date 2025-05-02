@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { gapi } from "gapi-script";
 import dayjs from "dayjs";
+import EditModal from "./EditModal";
 
 const CLIENT_ID =
   "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
@@ -17,7 +18,8 @@ function Pending() {
   const [copyMode, setCopyMode] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ mediator: "", type: "" });
-
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [EditId, setEditID] = useState(null);
   useEffect(() => {
     gapi.load("client:auth2", () => {
       gapi.client
@@ -52,15 +54,39 @@ function Pending() {
         range: "Sheet1!A2:M",
       });
       const rows = response.result.values || [];
+      const CURRENT_YEAR = new Date().getFullYear();
       const filteredOrders = rows
         .filter(
           (row) =>
             row[2]?.toLowerCase() === mediator.toLowerCase() &&
             row[7]?.toLowerCase() !== "a complete"
         )
+        .sort((a, b) => {
+          const parse = (dateStr) =>
+            dayjs(
+              dateStr,
+              ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
+              true
+            ).isValid()
+              ? dayjs(
+                  dateStr,
+                  ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
+                  true
+                ).year(CURRENT_YEAR)
+              : dayjs("1900-01-01");
+          return parse(a[1]).unix() - parse(b[1]).unix();
+        })
         .map((row) => ({
           order_id: row[0],
-          refund_form_date: row[1],
+          refund_form_date: dayjs(
+            row[1],
+            ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
+            true
+          ).isValid()
+            ? dayjs(row[1], ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"], true)
+                .year(CURRENT_YEAR)
+                .format("YYYY-MM-DD")
+            : "1900-01-01",
           Notes: row[8],
           BrandName: row[12],
         }));
@@ -73,7 +99,6 @@ function Pending() {
       alert("Error fetching data: " + error.message);
     }
   };
-
   const formatDate = (dateStr) => dayjs(dateStr).format("D MMM");
 
   const copyToClipboard = () => {
@@ -148,7 +173,6 @@ function Pending() {
                 "sumit ar",
                 "mishba",
                 "touch sky",
-                "trisha",
                 "rohit",
                 "anshul",
                 "kkb",
@@ -191,13 +215,24 @@ function Pending() {
                 <th>Order ID</th>
                 <th>Refund Date</th>
                 <th>Notes</th>
-                <th>BrandName</th>
+                <th>Brand</th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order, index) => (
                 <tr key={index}>
-                  <td>{order.order_id}</td>
+                  <td style={{ minWidth: "150px" }}>
+                    {order.order_id}{" "}
+                    <span
+                      onClick={() => {
+                        setEditID(order.order_id);
+                        setShowEditModal(true);
+                      }}
+                      style={{ marginLeft: "6px", cursor: "pointer" }}
+                    >
+                      ✏️
+                    </span>
+                  </td>
                   <td>{formatDate(order.refund_form_date)}</td>
                   <td>{order.Notes}</td>
                   <td>{order.BrandName}</td>
@@ -226,6 +261,13 @@ function Pending() {
           Copied! Mediator: <strong>{modalContent.mediator}</strong> | Type:{" "}
           <strong>{modalContent.type}</strong>
         </div>
+      )}
+      {showEditModal && (
+        <EditModal
+          setShowEditModal={setShowEditModal}
+          fetchOrders={fetchOrders}
+          searchId={EditId}
+        />
       )}
     </div>
   );
