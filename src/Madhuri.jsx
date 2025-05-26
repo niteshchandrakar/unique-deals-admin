@@ -214,6 +214,7 @@ function Madhuri() {
                       "anshul",
                       "subroo",
                       "poonam",
+                      "med 25",
                     ].map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
