@@ -1,22 +1,37 @@
 import "./App.css";
-import Admin from "./Admin";
-import { useState } from "react";
-import Pending from "./Pending";
+
+import Allroutes from "./Allroutes";
+import { Link } from "react-router-dom";
 
 function App() {
-  const [toggle, setToggle] = useState(true);
-
+  const buttonStyle = {
+    width: "20%",
+    margin: "10px",
+    padding: "12px 20px",
+    textAlign: "center",
+    textDecoration: "none",
+    backgroundColor: "#007BFF",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    display: "inline-block",
+    fontSize: "16px",
+    cursor: "pointer",
+  };
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "end" }}>
-        <button
-          style={{ width: "30%", margin: "10px" }}
-          onClick={() => setToggle((prev) => !prev)}
-        >
-          {!toggle ? "Refund Updates" : "Pending Orders"}
-        </button>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <Link to="/" style={buttonStyle}>
+          Order ID
+        </Link>
+        <Link to="/pending" style={buttonStyle}>
+          Pending
+        </Link>
+        <Link to="/madhuri" style={buttonStyle}>
+          Madhuri
+        </Link>
       </div>
-      {toggle ? <Admin /> : <Pending />}
+      <Allroutes />
     </div>
   );
 }

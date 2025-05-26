@@ -58,7 +58,8 @@ function Pending() {
       const filteredOrders = rows
         .filter(
           (row) =>
-            row[2]?.toLowerCase() === mediator.toLowerCase() &&
+            (mediator.toLowerCase() === "all mediator" ||
+              row[2]?.toLowerCase() === mediator.toLowerCase()) &&
             row[7]?.toLowerCase() !== "a complete"
         )
         .sort((a, b) => {
@@ -170,14 +171,20 @@ function Pending() {
             >
               <option value="">Select Mediator</option>
               {[
+                "all mediator",
+                "kkb",
+                "bgm",
+                "naaz",
+                "brand boosters",
+                "adf",
+                "touch sky",
+                "manish",
                 "sumit ar",
                 "mishba",
-                "touch sky",
                 "rohit",
                 "anshul",
-                "kkb",
                 "subroo",
-                "naaz",
+                "poonam",
               ].map((opt) => (
                 <option key={opt} value={opt}>
                   {opt}
