@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { gapi } from "gapi-script";
-import dayjs from "dayjs";
 
 const CLIENT_ID =
   "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
@@ -187,7 +186,7 @@ function Madhuri() {
                   style={{ maxWidth: "50px" }}
                   onClick={() => {
                     navigator.clipboard.writeText(order.order_id);
-                    showModal(order.order_id + " " + " Copy");
+                    showModal(order.order_id + +" Copy");
                   }}
                 >
                   {order.order_id}
