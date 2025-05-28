@@ -208,13 +208,14 @@ function Madhuri() {
                       "adf",
                       "touch sky",
                       "manish",
+                      "med 25",
                       "sumit ar",
                       "mishba",
                       "rohit",
                       "anshul",
                       "subroo",
                       "poonam",
-                      "med 25",
+                      "nikhil",
                     ].map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}

@@ -170,15 +170,21 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
                           <option value="">Select {key}</option>
                           {(key === "mediator"
                             ? [
+                                "kkb",
+                                "bgm",
+                                "naaz",
+                                "brand boosters",
+                                "adf",
+                                "touch sky",
+                                "manish",
+                                "med 25",
                                 "sumit ar",
                                 "mishba",
-                                "touch sky",
-                                "trisha",
                                 "rohit",
                                 "anshul",
-                                "kkb",
                                 "subroo",
-                                "naaz",
+                                "poonam",
+                                "nikhil",
                               ]
                             : ["pending", "a complete", "me given", "cancel"]
                           ).map((opt) => (

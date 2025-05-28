@@ -89,6 +89,7 @@ function Pending() {
                 .format("YYYY-MM-DD")
             : "1900-01-01",
           Notes: row[8],
+          payment: row[7] || "",
           BrandName: row[12],
         }));
       if (filteredOrders.length === 0) {
@@ -156,6 +157,7 @@ function Pending() {
       setShowModal(false);
     }, 2000);
   };
+  console.log(orders[0]);
 
   return (
     <div style={{ padding: "10px" }}>
@@ -186,6 +188,7 @@ function Pending() {
                 "anshul",
                 "subroo",
                 "poonam",
+                "nikhil",
               ].map((opt) => (
                 <option key={opt} value={opt}>
                   {opt}
@@ -223,7 +226,8 @@ function Pending() {
                 <th>Order ID</th>
                 <th>Refund Date</th>
                 <th>Notes</th>
-                <th>Brand</th>
+                <th>payment</th>
+                {/* <th>Brand</th> */}
               </tr>
             </thead>
             <tbody>
@@ -243,7 +247,8 @@ function Pending() {
                   </td>
                   <td>{formatDate(order.refund_form_date)}</td>
                   <td>{order.Notes}</td>
-                  <td>{order.BrandName}</td>
+                  <td>{order.payment}</td>
+                  {/* <td>{order.BrandName}</td> */}
                 </tr>
               ))}
             </tbody>
