@@ -178,12 +178,9 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
                                 "touch sky",
                                 "manish",
                                 "med 25",
-                                "sumit ar",
-                                "mishba",
-                                "rohit",
+
                                 "anshul",
-                                "subroo",
-                                "poonam",
+                                "kiwi",
                                 "nikhil",
                               ]
                             : ["pending", "a complete", "me given", "cancel"]
