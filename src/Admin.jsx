@@ -154,7 +154,22 @@ function Admin() {
 
   return (
     <div className="admin-container">
-      <h1>Refund Management</h1>
+      <h1>
+        Refund Management{" "}
+        <span
+          onClick={() => {
+            setIsAuthenticated(false);
+          }}
+          style={{
+            backgroundColor: "red",
+            padding: "5px",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          LogOut
+        </span>
+      </h1>
       {!isAuthenticated ? (
         <button
           style={{
