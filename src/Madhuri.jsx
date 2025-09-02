@@ -14,6 +14,8 @@ function Madhuri() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const [clickedOrderId, setClickedOrderId] = useState(null);
+
   const showModal = (message) => {
     setModalMessage(message);
     setTimeout(() => setModalMessage(""), 3000);
@@ -183,10 +185,23 @@ function Madhuri() {
             {orders.map((order, index) => (
               <tr key={index}>
                 <td
-                  style={{ maxWidth: "50px" }}
+                  style={{
+                    maxWidth: "50px",
+                    cursor: "pointer",
+                    border:
+                      order.order_id === clickedOrderId
+                        ? "2px solid red"
+                        : "1px solid #ccc",
+                    background:
+                      order.order_id === clickedOrderId
+                        ? "rgba(255,0,0,0.1)"
+                        : "transparent",
+                    transition: "all 0.3s ease",
+                  }}
                   onClick={() => {
                     navigator.clipboard.writeText(order.order_id);
-                    showModal(order.order_id + +" Copy");
+                    showModal(order.order_id);
+                    setClickedOrderId(order.order_id);
                   }}
                 >
                   {order.order_id}
