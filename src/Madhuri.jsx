@@ -54,8 +54,8 @@ function Madhuri() {
       const rows = response.result.values || [];
 
       const filteredOrders = rows
-        .filter((row) => row[2] === "" || row[4] === "")
-
+        .filter((row) => row[2] === "")
+        //  .filter((row) => row[2] === "" || row[4] === "")
         .map((row, idx) => ({
           order_id: row[0],
           refund_form_date: row[1],
@@ -175,7 +175,7 @@ function Madhuri() {
             <tr>
               <th>Order ID</th>
               <th>Mediator</th>
-              <th>Amount</th>
+              {/* <th>Amount</th> */}
               <th>Update</th>
             </tr>
           </thead>
@@ -209,7 +209,8 @@ function Madhuri() {
                       "touch sky",
                       "manish",
                       "med 25",
-
+                      "dabang",
+                      "cc",
                       "anshul",
                       "kiwi",
                       "nikhil",
@@ -220,7 +221,7 @@ function Madhuri() {
                     ))}
                   </select>
                 </td>
-                <td style={{ maxWidth: "60px" }}>
+                {/* <td style={{ maxWidth: "60px" }}>
                   <input
                     style={{ maxWidth: "45px" }}
                     type="text"
@@ -229,7 +230,7 @@ function Madhuri() {
                       handleChange(index, "order_amount", e.target.value)
                     }
                   />
-                </td>
+                </td> */}
                 <td>
                   <button onClick={() => handleUpdateOrder(order)}>
                     Update
