@@ -60,8 +60,11 @@ function Pending() {
           (row) =>
             (mediator.toLowerCase() === "all mediator" ||
               row[2]?.toLowerCase() === mediator.toLowerCase()) &&
-            row[7]?.toLowerCase() !== "a complete"
+            row[7]?.toLowerCase() !== "a complete" &&
+            row[7]?.toLowerCase() !== "cancel" &&
+            row[7]?.toLowerCase() !== "hold"
         )
+
         .sort((a, b) => {
           const parse = (dateStr) =>
             dayjs(
