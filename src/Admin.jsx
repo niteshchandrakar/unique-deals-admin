@@ -278,6 +278,7 @@ function Admin() {
                                   "pending",
                                   "a complete",
                                   "me given",
+                                  "hold",
                                   "cancel",
                                 ].map((opt) => (
                                   <option key={opt} value={opt}>

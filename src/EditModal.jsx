@@ -183,7 +183,14 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
                                 "kiwi",
                                 "nikhil",
                               ]
-                            : ["pending", "a complete", "me given", "cancel"]
+                            : [
+                                "pending",
+                                "a complete",
+                                "me given",
+
+                                "hold",
+                                "cancel",
+                              ]
                           ).map((opt) => (
                             <option key={opt} value={opt}>
                               {opt}
