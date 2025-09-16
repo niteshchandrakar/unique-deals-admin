@@ -63,12 +63,13 @@ function Formcheck() {
         .filter((row) => row[9] === "")
         .filter((row) => {
           const refundDate = dayjs(row[1], "M/D/YYYY"); // format mm/dd/yyyy
-          const diffInDays = today.diff(refundDate, "day");
+          // const diffInDays = today.diff(refundDate, "day");
 
           // 1 September 2025
           const cutoffDate = dayjs("09/01/2025", "MM/DD/YYYY");
 
-          return diffInDays >= 7 && refundDate.isAfter(cutoffDate);
+          // return diffInDays >= 2 && refundDate.isAfter(cutoffDate);
+          return refundDate.isAfter(cutoffDate);
         })
         .map((row, idx) => ({
           order_id: row[0],
