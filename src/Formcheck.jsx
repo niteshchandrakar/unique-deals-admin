@@ -56,7 +56,7 @@ function Formcheck() {
       });
 
       const rows = response.result.values || [];
-      const today = dayjs();
+      // const today = dayjs();
       const filteredOrders = rows
         .filter((row) => row[2] === mediator.toLowerCase())
 
@@ -90,10 +90,6 @@ function Formcheck() {
       alert("Error fetching data: " + error.message);
     }
   };
-
-  useEffect(() => {
-    if (isAuthenticated) fetchOrders();
-  }, [isAuthenticated]);
 
   const handleChange = (index, field, value) => {
     setOrders((prev) => {
