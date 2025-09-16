@@ -160,7 +160,6 @@ function Pending() {
       setShowModal(false);
     }, 2000);
   };
-  console.log(orders[0]);
 
   return (
     <div style={{ padding: "10px" }}>
