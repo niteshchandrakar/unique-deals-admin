@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { gapi } from "gapi-script";
 import React, { useCallback, useEffect, useState } from "react";
-
+import med from "./med";
 const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
 
 function EditModal({ searchId, setShowEditModal, fetchOrders }) {
@@ -169,20 +169,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
                         >
                           <option value="">Select {key}</option>
                           {(key === "mediator"
-                            ? [
-                                "kkb",
-                                "bgm",
-                                "naaz",
-                                "brand boosters",
-                                "adf",
-                                "touch sky",
-                                "manish",
-                                "med 25",
-
-                                "anshul",
-                                "kiwi",
-                                "nikhil",
-                              ]
+                            ? med
                             : [
                                 "pending",
                                 "a complete",

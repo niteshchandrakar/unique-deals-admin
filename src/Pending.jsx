@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { gapi } from "gapi-script";
 import dayjs from "dayjs";
 import EditModal from "./EditModal";
-
+import med from "./med";
 const CLIENT_ID =
   "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
 const API_KEY = "AIzaSyDScP5GlWBV1kA8k0cfLK6r7JvRHRqqOJU";
@@ -174,21 +174,7 @@ function Pending() {
               onChange={(e) => setMediator(e.target.value)}
             >
               <option value="">Select Mediator</option>
-              {[
-                "all mediator",
-                "kkb",
-                "bgm",
-                "naaz",
-                "brand boosters",
-                "adf",
-                "touch sky",
-                "manish",
-                "med 25",
-
-                "anshul",
-                "kiwi",
-                "nikhil",
-              ].map((opt) => (
+              {med.map((opt) => (
                 <option key={opt} value={opt}>
                   {opt}
                 </option>
