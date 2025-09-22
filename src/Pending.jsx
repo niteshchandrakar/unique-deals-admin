@@ -61,8 +61,7 @@ function Pending() {
             (mediator.toLowerCase() === "all mediator" ||
               row[2]?.toLowerCase() === mediator.toLowerCase()) &&
             row[7]?.toLowerCase() !== "a complete" &&
-            row[7]?.toLowerCase() !== "cancel" &&
-            row[7]?.toLowerCase() !== "hold"
+            row[7]?.toLowerCase() !== "cancel"
         )
 
         .sort((a, b) => {
