@@ -153,7 +153,6 @@ function Formcheck() {
       setLoading(false);
     }
   };
-  console.log(orders);
   return (
     <div style={{ padding: "10px", position: "relative" }}>
       <h1>Order Filter by Mediator</h1>
@@ -245,16 +244,16 @@ function Formcheck() {
                       <option value="notaccess">Not Access</option>
                     </select>
                   </td>
-                  {/* <td style={{ maxWidth: "60px" }}>
-                  <input
-                    style={{ maxWidth: "45px" }}
-                    type="text"
-                    value={order.order_amount}
-                    onChange={(e) =>
-                      handleChange(index, "order_amount", e.target.value)
-                    }
-                  />
-                </td> */}
+                  <td style={{ maxWidth: "60px" }}>
+                    <input
+                      style={{ maxWidth: "45px" }}
+                      type="text"
+                      value={order.order_amount}
+                      onChange={(e) =>
+                        handleChange(index, "order_amount", e.target.value)
+                      }
+                    />
+                  </td>
                   <td>
                     <button onClick={() => handleUpdateOrder(order)}>
                       Update
