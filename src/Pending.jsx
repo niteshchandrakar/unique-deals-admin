@@ -93,6 +93,7 @@ function Pending() {
           Notes: row[8],
           payment: row[7] || "",
           BrandName: row[12],
+          form: row[9],
         }));
       if (filteredOrders.length === 0) {
         alert("check med name");
@@ -211,7 +212,7 @@ function Pending() {
                 <th>Refund Date</th>
                 <th>Notes</th>
                 <th>payment</th>
-                {/* <th>Brand</th> */}
+                <th>Form</th>
               </tr>
             </thead>
             <tbody>
@@ -232,7 +233,7 @@ function Pending() {
                   <td>{formatDate(order.refund_form_date)}</td>
                   <td>{order.Notes}</td>
                   <td>{order.payment}</td>
-                  {/* <td>{order.BrandName}</td> */}
+                  <td>{order.form}</td>
                 </tr>
               ))}
             </tbody>
