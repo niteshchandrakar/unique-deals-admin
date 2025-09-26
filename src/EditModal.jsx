@@ -18,7 +18,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
       for (const sheet of sheets) {
         const response = await gapi.client.sheets.spreadsheets.values.get({
           spreadsheetId: SHEET_ID,
-          range: `${sheet}!A2:I`,
+          range: `${sheet}!A2:N`,
         });
         const rows = response.result.values || [];
         const matchingOrders = rows.filter((row) => row[0] === searchId);
@@ -42,11 +42,19 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
           "paid_amount",
           "payment",
           "notes",
+          "form",
+          "",
+          "",
+          "",
+          "Brand",
         ];
-        const orderObject = keys.reduce(
-          (acc, key, index) => ({ ...acc, [key]: foundOrders[0][index] || "" }),
-          {}
-        );
+        const orderObject = keys.reduce((acc, key, index) => {
+          if (key) {
+            // only include non-empty keys
+            acc[key] = foundOrders[0][index] || "";
+          }
+          return acc;
+        }, {});
         setOrderData(orderObject);
         showModal("Order Mil Gaya✅✅");
       }
@@ -56,7 +64,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
       setIsLoading(false);
     }
   }, [searchId]); // only depends on searchId
-
+  console.log(orderData);
   const handleUpdateOrder = async () => {
     if (!orderData) return;
 
@@ -76,7 +84,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
       const updateResponse =
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
-          range: `Sheet1!A${actualRowNumber}:I${actualRowNumber}`,
+          range: `Sheet1!A${actualRowNumber}:N${actualRowNumber}`,
           valueInputOption: "USER_ENTERED",
           resource: {
             values: [
@@ -90,6 +98,11 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
                 "",
                 orderData.payment,
                 orderData.notes,
+                orderData.form,
+                "",
+                "",
+                orderData.email,
+                orderData.Brand,
               ],
             ],
           },
