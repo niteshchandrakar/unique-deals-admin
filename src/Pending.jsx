@@ -15,7 +15,7 @@ function Pending() {
   const [mediator, setMediator] = useState("");
   const [orders, setOrders] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [copyMode, setCopyMode] = useState("");
+  const [copyMode, setCopyMode] = useState("full");
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ mediator: "", type: "" });
   const [showEditModal, setShowEditModal] = useState(false);
@@ -51,7 +51,7 @@ function Pending() {
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: "Sheet1!A2:M",
+        range: "Sheet1!A2:N",
       });
       const rows = response.result.values || [];
       const CURRENT_YEAR = new Date().getFullYear();
@@ -92,8 +92,8 @@ function Pending() {
             : "1900-01-01",
           Notes: row[8],
           payment: row[7] || "",
-          BrandName: row[13],
-          form: row[9],
+          BrandName: row[13] || "",
+          OrderForm: row[9] || "",
         }));
       if (filteredOrders.length === 0) {
         alert("check med name");
@@ -112,14 +112,14 @@ function Pending() {
 
     let filtered = orders;
 
-    if (
-      copyMode === "olderThanMonth" ||
-      copyMode === "olderThanMonthWithBrand"
-    ) {
-      filtered = orders.filter(
-        (o) => now.diff(dayjs(o.refund_form_date), "month") >= 1
-      );
-    }
+    // if (
+    //   copyMode === "olderThanMonth" ||
+    //   copyMode === "olderThanMonthWithBrand"
+    // ) {
+    //   filtered = orders.filter(
+    //     (o) => now.diff(dayjs(o.refund_form_date), "month") >= 1
+    //   );
+    // }
 
     if (copyMode === "full") {
       textToCopy = filtered
@@ -191,15 +191,15 @@ function Pending() {
               value={copyMode}
               onChange={(e) => setCopyMode(e.target.value)}
             >
-              <option value="">Select Copy Mode</option>
+              {/* <option value="">Select Copy Mode</option> */}
               <option value="full">Order ID + Refund Date + Brand</option>
-              <option value="idAndDate">Order ID + Refund Date</option>
+              {/* <option value="idAndDate">Order ID + Refund Date</option>
               <option value="olderThanMonth">
                 Order ID + Refund Date (Older than 1 month)
               </option>
               <option value="olderThanMonthWithBrand">
                 Order ID + Refund Date + Brand (Older than 1 month)
-              </option>
+              </option> */}
             </select>
 
             <button onClick={copyToClipboard}>Copy</button>
@@ -231,7 +231,8 @@ function Pending() {
                       </span>
                     </div>
                     <div>
-                      {order.payment},{order.form}
+                      {order.payment}
+                      {order.form}
                     </div>
                   </td>
                   <td>{formatDate(order.refund_form_date)}</td>

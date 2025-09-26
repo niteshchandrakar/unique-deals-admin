@@ -46,7 +46,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
           "",
           "",
           "",
-          "Brand",
+          "BrandName",
         ];
         const orderObject = keys.reduce((acc, key, index) => {
           if (key) {
@@ -64,7 +64,6 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
       setIsLoading(false);
     }
   }, [searchId]); // only depends on searchId
-  console.log(orderData);
   const handleUpdateOrder = async () => {
     if (!orderData) return;
 
@@ -102,7 +101,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
                 "",
                 "",
                 orderData.email,
-                orderData.Brand,
+                orderData.BrandName,
               ],
             ],
           },
