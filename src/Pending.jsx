@@ -92,7 +92,7 @@ function Pending() {
             : "1900-01-01",
           Notes: row[8],
           payment: row[7] || "",
-          BrandName: row[12],
+          BrandName: row[13],
           form: row[9],
         }));
       if (filteredOrders.length === 0) {
@@ -211,29 +211,32 @@ function Pending() {
                 <th>Order ID</th>
                 <th>Refund Date</th>
                 <th>Notes</th>
-                <th>payment</th>
-                <th>Form</th>
+                <th>Brand</th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order, index) => (
                 <tr key={index}>
                   <td style={{ minWidth: "150px" }}>
-                    {order.order_id}{" "}
-                    <span
-                      onClick={() => {
-                        setEditID(order.order_id);
-                        setShowEditModal(true);
-                      }}
-                      style={{ marginLeft: "6px", cursor: "pointer" }}
-                    >
-                      ✏️
-                    </span>
+                    <div>
+                      {order.order_id}{" "}
+                      <span
+                        onClick={() => {
+                          setEditID(order.order_id);
+                          setShowEditModal(true);
+                        }}
+                        style={{ marginLeft: "6px", cursor: "pointer" }}
+                      >
+                        ✏️
+                      </span>
+                    </div>
+                    <div>
+                      {order.payment},{order.form}
+                    </div>
                   </td>
                   <td>{formatDate(order.refund_form_date)}</td>
                   <td>{order.Notes}</td>
-                  <td>{order.payment}</td>
-                  <td>{order.form}</td>
+                  <td>{order.BrandName}</td>
                 </tr>
               ))}
             </tbody>
