@@ -108,7 +108,6 @@ function Pending() {
 
   const copyToClipboard = () => {
     let textToCopy = "";
-    const now = dayjs();
 
     let filtered = orders;
 
