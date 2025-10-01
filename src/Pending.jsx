@@ -93,7 +93,7 @@ function Pending() {
           Notes: row[8],
           payment: row[7] || "",
           BrandName: row[13] || "",
-          OrderForm: row[9] || "",
+          form: row[9] || "",
         }));
       if (filteredOrders.length === 0) {
         alert("check med name");
@@ -230,8 +230,32 @@ function Pending() {
                       </span>
                     </div>
                     <div>
-                      {order.payment}
-                      {order.form}
+                      {order?.payment && (
+                        <span
+                          style={{
+                            borderRadius: "5px",
+                            backgroundColor:
+                              order.payment === "me given" ? "yellow" : "",
+                            paddingLeft: "5px",
+                            paddingRight: "5px",
+                          }}
+                        >
+                          {order.payment}
+                        </span>
+                      )}
+                      {order?.form && (
+                        <span
+                          style={{
+                            borderRadius: "5px",
+                            backgroundColor:
+                              order.form === "ok" ? "green" : "red",
+                            paddingLeft: "5px",
+                            paddingRight: "5px",
+                          }}
+                        >
+                          {order.form}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td>{formatDate(order.refund_form_date)}</td>
