@@ -200,8 +200,8 @@ function Formcheck() {
             <tr>
               <th>Order ID</th>
               <th>Form</th>
-              {/* <th>Amount</th> */}
-              <th>Update</th>
+              <th>Amount</th>
+              {/* <th>Update</th> */}
             </tr>
           </thead>
           <tbody>
@@ -230,6 +230,7 @@ function Formcheck() {
                     }}
                   >
                     {order.order_id}
+                    <div> {dayjs(order.refund_form_date).format("DD-MMM")}</div>
                   </td>
                   <td>
                     <select
