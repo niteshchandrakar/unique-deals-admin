@@ -4,6 +4,7 @@ import Admin from "./Admin";
 import Pending from "./Pending";
 import Madhuri from "./Madhuri";
 import Formcheck from "./Formcheck";
+import SellerUpdate from "./SellerUpdate";
 
 function Allroutes() {
   return (
@@ -12,6 +13,7 @@ function Allroutes() {
       <Route path="/pending" element={<Pending />} />
       <Route path="/madhuri" element={<Madhuri />} />
       <Route path="/check" element={<Formcheck />} />
+      <Route path="/seller" element={<SellerUpdate />} />
     </Routes>
   );
 }

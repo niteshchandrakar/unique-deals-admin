@@ -15,14 +15,14 @@ function App() {
     border: "none",
     borderRadius: "8px",
     display: "inline-block",
-    fontSize: "16px",
+    fontSize: "12px",
     cursor: "pointer",
   };
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "center" }}>
         <Link to="/" style={buttonStyle}>
-          Order ID
+          Id
         </Link>
         <Link to="/pending" style={buttonStyle}>
           Pending
@@ -32,6 +32,9 @@ function App() {
         </Link>
         <Link to="/check" style={buttonStyle}>
           Check
+        </Link>
+        <Link to="/seller" style={buttonStyle}>
+          Seller
         </Link>
       </div>
       <Allroutes />
