@@ -119,7 +119,7 @@ function SellerUpdate() {
 
     try {
       const today = dayjs();
-      const nextDate = today.add(10, "day");
+      const nextDate = today.add(15, "day");
 
       let newValues;
 
