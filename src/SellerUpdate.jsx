@@ -82,12 +82,13 @@ function SellerUpdate() {
             : 0,
           isPastDate: dateDayjs ? dateDayjs.isBefore(today, "day") : false,
           index: idx + 2,
+          pendingOrders: [], // ⬅️ store pending orders per seller
         };
       });
-      // Sort sellers: earliest date first (farthest in the past)
+
       formatted.sort((a, b) => {
-        if (!a.date) return 1; // if a has no date, put it later
-        if (!b.date) return -1; // if b has no date, put it later
+        if (!a.date) return 1;
+        if (!b.date) return -1;
         return dayjs(a.date).isAfter(dayjs(b.date)) ? 1 : -1;
       });
 
@@ -105,7 +106,6 @@ function SellerUpdate() {
     setSellers((prev) => {
       const updated = [...prev];
       updated[index][field] = value;
-
       if (field === "date") {
         updated[index].isPastDate = dayjs(value).isBefore(dayjs(), "day");
       }
@@ -160,6 +160,57 @@ function SellerUpdate() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ Fetch Pending Orders (now show below)
+  const fetchPendingOrders = async (mediatorName, index) => {
+    try {
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: "Sheet1!A2:N",
+      });
+
+      const rows = response.result.values || [];
+      const currentYear = new Date().getFullYear();
+
+      const filtered = rows
+        .filter(
+          (r) =>
+            r[2]?.toLowerCase() === mediatorName.toLowerCase() &&
+            r[7]?.toLowerCase() !== "a complete" &&
+            r[7]?.toLowerCase() !== "cancel"
+        )
+        .map((r) => ({
+          order_id: r[0],
+          refund_form_date: dayjs(
+            r[1],
+            ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
+            true
+          )
+            .year(currentYear)
+            .format("D MMM"),
+          BrandName: r[13] || "",
+        }));
+
+      setSellers((prev) => {
+        const updated = [...prev];
+        updated[index].pendingOrders = filtered;
+        return updated;
+      });
+    } catch (error) {
+      alert("Error fetching pending orders: " + error.message);
+    }
+  };
+
+  const handleCopy = (orders) => {
+    const formatted = orders
+      .map(
+        (o) =>
+          `${o.order_id}\t\t${o.refund_form_date}\t\t${o.BrandName || ""}\n`
+      )
+      .join("");
+    navigator.clipboard.writeText(formatted);
+    showModal("📋 Pending orders copied!");
   };
 
   return (
@@ -220,15 +271,15 @@ function SellerUpdate() {
                   style={{
                     color: "green",
                     fontWeight: "bolder",
-                    display: "flex",
-                    justifyContent: "center",
-                    width: "100%",
+                    textAlign: "center",
+                    marginBottom: "10px",
                   }}
                 >
                   {s.seller}
                 </div>
 
-                <div style={{ marginTop: "8px" }}>
+                {/* Form fields */}
+                <div style={{ marginBottom: "8px" }}>
                   <strong>Date:</strong>{" "}
                   <input
                     type="date"
@@ -238,7 +289,7 @@ function SellerUpdate() {
                   />
                 </div>
 
-                <div style={{ marginTop: "8px" }}>
+                <div style={{ marginBottom: "8px" }}>
                   <strong>Status:</strong>{" "}
                   <select
                     value={s.status}
@@ -250,7 +301,7 @@ function SellerUpdate() {
                   </select>
                 </div>
 
-                <div style={{ marginTop: "8px" }}>
+                <div style={{ marginBottom: "8px" }}>
                   <strong>Remark:</strong>{" "}
                   <input
                     type="text"
@@ -259,7 +310,9 @@ function SellerUpdate() {
                     style={{ width: "100%", padding: "6px", marginTop: "4px" }}
                   />
                 </div>
-
+                <div style={{ marginTop: "8px" }}>
+                  <strong>Last Remark:</strong> {s.lastRemark}
+                </div>
                 <div style={{ marginTop: "8px" }}>
                   <strong>Last Update:</strong>{" "}
                   <input
@@ -282,26 +335,80 @@ function SellerUpdate() {
                     </div>
                   )}
                 </div>
+                <button
+                  onClick={() => handleUpdate(s)}
+                  style={{
+                    width: "100%",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "10px",
+                    marginTop: "10px",
+                  }}
+                >
+                  Update
+                </button>
 
-                <div style={{ marginTop: "8px" }}>
-                  <strong>Last Remark:</strong> {s.lastRemark}
-                </div>
+                <button
+                  onClick={() => fetchPendingOrders(s.seller, i)}
+                  style={{
+                    width: "100%",
+                    backgroundColor: "#28a745",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    padding: "10px",
+                    marginTop: "8px",
+                  }}
+                >
+                  Show Pending Orders
+                </button>
 
-                <div style={{ marginTop: "10px", textAlign: "center" }}>
-                  <button
-                    onClick={() => handleUpdate(s)}
+                {/* ✅ Pending orders list */}
+                {s.pendingOrders && s.pendingOrders.length > 0 && (
+                  <div
                     style={{
-                      padding: "10px 15px",
-                      backgroundColor: "#007bff",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "5px",
-                      width: "100%",
+                      background: "#f8f9fa",
+                      marginTop: "10px",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      fontSize: "14px",
                     }}
                   >
-                    Update
-                  </button>
-                </div>
+                    <div
+                      style={{
+                        fontWeight: "bold",
+                        marginBottom: "5px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>Pending Orders ({s.pendingOrders.length})</span>
+                      <button
+                        onClick={() => handleCopy(s.pendingOrders)}
+                        style={{
+                          backgroundColor: "#6c63ff",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "4px",
+                          padding: "4px 10px",
+                        }}
+                      >
+                        Copy
+                      </button>
+                    </div>
+
+                    <ul style={{ listStyle: "none", padding: 0 }}>
+                      {s.pendingOrders.map((o, idx) => (
+                        <li key={idx}>
+                          {o.order_id} — {o.refund_form_date} —{" "}
+                          {o.BrandName || ""}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             );
           })}
