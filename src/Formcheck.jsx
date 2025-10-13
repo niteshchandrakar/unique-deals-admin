@@ -62,14 +62,15 @@ function Formcheck() {
 
         .filter((row) => row[9] === "")
         .filter((row) => {
-          const refundDate = dayjs(row[1], "M/D/YYYY"); // format mm/dd/yyyy
-          // const diffInDays = today.diff(refundDate, "day");
+          const refundDate = dayjs(row[1], "M/D/YYYY"); // refund date (format: mm/dd/yyyy)
+          const cutoffDate = dayjs("09/01/2025", "MM/DD/YYYY"); // fixed date: 1 September 2025
+          const today = dayjs(); // current date
 
-          // 1 September 2025
-          const cutoffDate = dayjs("09/01/2025", "MM/DD/YYYY");
+          // difference between today and refund date in days
+          const diffInDays = today.diff(refundDate, "day");
 
-          // return diffInDays >= 2 && refundDate.isAfter(cutoffDate);
-          return refundDate.isAfter(cutoffDate);
+          // condition: date should be after cutoffDate and at least 4 days old
+          return refundDate.isAfter(cutoffDate) && diffInDays >= 4;
         })
         .map((row, idx) => ({
           order_id: row[0],
