@@ -28,10 +28,10 @@ function App() {
           Pending
         </Link>
         <Link to="/madhuri" style={buttonStyle}>
-          Madhuri
+          Priyanka
         </Link>
         <Link to="/check" style={buttonStyle}>
-          Check
+          Madhuri
         </Link>
         <Link to="/seller" style={buttonStyle}>
           Seller
