@@ -13,6 +13,7 @@ const med = [
   "kiwi",
   "nikhil",
   "raghav",
+  "tqm",
 ];
 
 export default med;
