@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import Formcheck from "./Components/Formcheck";
 import IdNotFound from "./Components/IdNotFound";
+import WrongForm from "./Components/WrongForm";
 
 function Madhuri() {
   const [active, setActive] = useState("formCheck"); // default selected
 
   const buttonStyle = {
-    width: "120px",
+    width: "100px",
     margin: "10px",
-    padding: "8px 12px",
+    padding: "4px 6px",
     textAlign: "center",
     textDecoration: "none",
     border: "none",
@@ -30,7 +31,7 @@ function Madhuri() {
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "20px" }}>
+    <div style={{ textAlign: "center", marginTop: "0px" }}>
       {/* Buttons */}
       <div>
         <button
@@ -52,10 +53,22 @@ function Madhuri() {
         >
           Not Found ID
         </button>
+
+        <button
+          style={{
+            ...buttonStyle,
+            ...(active === "wrongForm" ? activeButton : inactiveButton),
+          }}
+          onClick={() => setActive("wrongForm")}
+        >
+          Wrong Form
+        </button>
       </div>
 
-      {/* Conditional Text */}
-      {active === "formCheck" ? <Formcheck /> : <IdNotFound />}
+      {/* Conditional Component Rendering */}
+      {active === "formCheck" && <Formcheck />}
+      {active === "notFound" && <IdNotFound />}
+      {active === "wrongForm" && <WrongForm />}
     </div>
   );
 }

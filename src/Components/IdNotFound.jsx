@@ -174,7 +174,7 @@ function IdNotFound() {
   };
 
   return (
-    <div style={{ padding: "10px", position: "relative" }}>
+    <div style={{ padding: "2px", position: "relative" }}>
       <h1>Order Filter by Mediator</h1>
 
       {loading && (

@@ -10,7 +10,7 @@ const DISCOVERY_DOC =
   "https://sheets.googleapis.com/$discovery/rest?version=v4";
 const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 
-function Formcheck() {
+function WrongForm() {
   const [mediator, setMediator] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [orders, setOrders] = useState([]);
@@ -58,9 +58,8 @@ function Formcheck() {
       const rows = response.result.values || [];
       // const today = dayjs();
       const filteredOrders = rows
-        .filter((row) => row[2] === mediator.toLowerCase())
 
-        .filter((row) => row[9] === "")
+        .filter((row) => row[9] === "wrong")
         .filter((row) => {
           const refundDate = dayjs(row[1], "M/D/YYYY"); // refund date (format: mm/dd/yyyy)
           const cutoffDate = dayjs("09/01/2025", "MM/DD/YYYY"); // fixed date: 1 September 2025
@@ -154,23 +153,11 @@ function Formcheck() {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    fetchOrders();
+  }, []);
   return (
     <div style={{ padding: "2px", position: "relative" }}>
-      <h1>Order Filter by Mediator</h1>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-        <select value={mediator} onChange={(e) => setMediator(e.target.value)}>
-          <option value="">Select Mediator</option>
-          {med.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-
-        <button style={{ width: "30%" }} onClick={fetchOrders}>
-          Fetch Orders
-        </button>
-      </div>
       {loading && (
         <div
           style={{
@@ -231,7 +218,14 @@ function Formcheck() {
                     }}
                   >
                     {order.order_id}
-                    <div> {dayjs(order.refund_form_date).format("DD-MMM")}</div>
+                    <div>
+                      {" "}
+                      {dayjs(order.refund_form_date).format("DD-MMM")}{" "}
+                      <span style={{ fontWeight: "bold" }}>
+                        {" "}
+                        {order.Mediator}
+                      </span>
+                    </div>
                   </td>
                   <td>
                     <select
@@ -271,4 +265,4 @@ function Formcheck() {
   );
 }
 
-export default Formcheck;
+export default WrongForm;
