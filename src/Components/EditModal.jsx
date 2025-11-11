@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { gapi } from "gapi-script";
 import React, { useCallback, useEffect, useState } from "react";
-import med from "./med";
+import med from ".././med";
 const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
 
 function EditModal({ searchId, setShowEditModal, fetchOrders }) {

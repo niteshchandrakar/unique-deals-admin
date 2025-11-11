@@ -1,6 +1,6 @@
 import "./App.css";
 
-import Allroutes from "./Allroutes";
+import Allroutes from "./Components/Allroutes";
 import { Link } from "react-router-dom";
 
 function App() {
@@ -27,10 +27,10 @@ function App() {
         <Link to="/pending" style={buttonStyle}>
           Pending
         </Link>
-        <Link to="/madhuri" style={buttonStyle}>
+        <Link to="/priyanka" style={buttonStyle}>
           Priyanka
         </Link>
-        <Link to="/check" style={buttonStyle}>
+        <Link to="/madhuri" style={buttonStyle}>
           Madhuri
         </Link>
         <Link to="/seller" style={buttonStyle}>

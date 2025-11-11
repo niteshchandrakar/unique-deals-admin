@@ -14,6 +14,8 @@ const med = [
   "nikhil",
   "raghav",
   "tqm",
+  "gaurav",
+  "nahi-mila",
 ];
 
 export default med;
