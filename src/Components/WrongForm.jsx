@@ -185,76 +185,105 @@ function WrongForm() {
           <thead>
             <tr>
               <th>Order ID</th>
+              <th>Refund Date</th> {/* 👈 NEW */}
               <th>Form</th>
               <th>Amount</th>
-              {/* <th>Update</th> */}
+              <th>Update</th>
             </tr>
           </thead>
+
           <tbody>
-            {orders
-              // .filter((order) => order.Mediator === mediator)
-              .map((order, index) => (
-                <tr key={index}>
-                  <td
-                    style={{
-                      maxWidth: "50px",
-                      cursor: "pointer",
-                      border:
-                        order.order_id === clickedOrderId
-                          ? "2px solid red"
-                          : "1px solid #ccc",
-                      background:
-                        order.order_id === clickedOrderId
-                          ? "rgba(255,0,0,0.1)"
-                          : "transparent",
-                      transition: "all 0.3s ease",
+            {orders.map((order, index) => (
+              <tr key={index}>
+                {/* Order ID cell as-is */}
+                <td
+                  style={{
+                    maxWidth: "50px",
+                    cursor: "pointer",
+                    border:
+                      order.order_id === clickedOrderId
+                        ? "2px solid red"
+                        : "1px solid #ccc",
+                    background:
+                      order.order_id === clickedOrderId
+                        ? "rgba(255,0,0,0.1)"
+                        : "transparent",
+                    transition: "all 0.3s ease",
+                  }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(order.order_id);
+                    showModal(order.order_id);
+                    setClickedOrderId(order.order_id);
+                  }}
+                >
+                  {order.order_id}
+                  <div>
+                    {/* existing tiny info below ID (optional) */}
+                    {order.refund_form_date &&
+                      dayjs(order.refund_form_date, "M/D/YYYY").format(
+                        "DD-MMM"
+                      )}{" "}
+                    <span style={{ fontWeight: "bold" }}>{order.Mediator}</span>
+                  </div>
+                </td>
+
+                {/* 👇 NEW: Refund Date editable */}
+                <td>
+                  <input
+                    style={{ width: "70px" }}
+                    type="date"
+                    value={
+                      order.refund_form_date
+                        ? dayjs(order.refund_form_date, "M/D/YYYY").format(
+                            "YYYY-MM-DD"
+                          )
+                        : ""
+                    }
+                    onChange={(e) => {
+                      const iso = e.target.value; // YYYY-MM-DD
+                      const sheetFormat = iso
+                        ? dayjs(iso, "YYYY-MM-DD").format("M/D/YYYY")
+                        : "";
+                      handleChange(index, "refund_form_date", sheetFormat);
                     }}
-                    onClick={() => {
-                      navigator.clipboard.writeText(order.order_id);
-                      showModal(order.order_id);
-                      setClickedOrderId(order.order_id);
-                    }}
+                  />
+                </td>
+
+                {/* Form select as-is */}
+                <td>
+                  <select
+                    value={order.form}
+                    onChange={(e) =>
+                      handleChange(index, "form", e.target.value)
+                    }
                   >
-                    {order.order_id}
-                    <div>
-                      {" "}
-                      {dayjs(order.refund_form_date).format("DD-MMM")}{" "}
-                      <span style={{ fontWeight: "bold" }}>
-                        {" "}
-                        {order.Mediator}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <select
-                      value={order.form}
-                      onChange={(e) =>
-                        handleChange(index, "form", e.target.value)
-                      }
-                    >
-                      <option value="">Status</option>
-                      <option value="ok">Ok</option>
-                      <option value="wrong">Wrong</option>
-                      <option value="notaccess">Not Access</option>
-                    </select>
-                  </td>
-                  <td style={{ maxWidth: "60px" }}>
-                    <input
-                      style={{ maxWidth: "45px" }}
-                      type="text"
-                      value={order.order_amount}
-                      onChange={(e) =>
-                        handleChange(index, "order_amount", e.target.value)
-                      }
-                    />
-                  </td>
-                  <td>
-                    <button onClick={() => handleUpdateOrder(order)}>
-                      Update
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    <option value="">Status</option>
+                    <option value="ok">Ok</option>
+                    <option value="wrong">Wrong</option>
+                    <option value="notaccess">Not Access</option>
+                  </select>
+                </td>
+
+                {/* Amount input as-is */}
+                <td style={{ maxWidth: "60px" }}>
+                  <input
+                    style={{ maxWidth: "45px" }}
+                    type="text"
+                    value={order.order_amount}
+                    onChange={(e) =>
+                      handleChange(index, "order_amount", e.target.value)
+                    }
+                  />
+                </td>
+
+                {/* Update button as-is */}
+                <td>
+                  <button onClick={() => handleUpdateOrder(order)}>
+                    Update
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       )}
