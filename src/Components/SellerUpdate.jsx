@@ -97,7 +97,6 @@ function SellerUpdate() {
       alert("Error fetching data: " + error.message);
     }
   };
-
   useEffect(() => {
     if (isAuthenticated) fetchSellers();
   }, [isAuthenticated]);
@@ -178,7 +177,8 @@ function SellerUpdate() {
           (r) =>
             r[2]?.toLowerCase() === mediatorName.toLowerCase() &&
             r[7]?.toLowerCase() !== "a complete" &&
-            r[7]?.toLowerCase() !== "cancel"
+            r[7]?.toLowerCase() !== "cancel" &&
+            r[7]?.toLowerCase() !== "seller given"
         )
         .map((r) => ({
           order_id: r[0],
