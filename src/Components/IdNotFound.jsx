@@ -56,7 +56,11 @@ function IdNotFound() {
       const rows = response.result.values || [];
 
       const filteredOrders = rows
-        .filter((row) => row[2] === "nahi-mila")
+        .filter(
+          (row) =>
+            row[2] === "nahi-mila" && (row[7] === "pending" || row[7] === "")
+        )
+
         //  .filter((row) => row[2] === "" || row[4] === "")
         .map((row, idx) => ({
           order_id: row[0],
