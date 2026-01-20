@@ -17,6 +17,9 @@ function Formcheck() {
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [clickedOrderId, setClickedOrderId] = useState(null);
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [reasonText, setReasonText] = useState("");
+  const [activeIndex, setActiveIndex] = useState(null);
 
   const showModal = (message) => {
     setModalMessage(message);
@@ -58,20 +61,28 @@ function Formcheck() {
       const rows = response.result.values || [];
       // const today = dayjs();
       const filteredOrders = rows
-        .filter((row) => row[2] === mediator.toLowerCase())
+        // mediator match (case-insensitive)
+        .filter((row) => row[2]?.toLowerCase() === mediator.toLowerCase())
 
+        // payment: empty OR pending
+        .filter((row) => row[7] === "" || row[7] === "pending")
+
+        // other empty condition
         .filter((row) => row[9] === "")
-        .filter((row) => {
-          const refundDate = dayjs(row[1], "M/D/YYYY"); // refund date (format: mm/dd/yyyy)
-          const cutoffDate = dayjs("09/01/2025", "MM/DD/YYYY"); // fixed date: 1 September 2025
-          const today = dayjs(); // current date
 
-          // difference between today and refund date in days
+        .filter((row) => {
+          const refundDate = dayjs(row[1], "M/D/YYYY"); // refund date
+          const cutoffDate = dayjs("09/01/2025", "MM/DD/YYYY"); // 1 Sept 2025
+          const today = dayjs();
+
+          if (!refundDate.isValid()) return false;
+
           const diffInDays = today.diff(refundDate, "day");
 
-          // condition: date should be after cutoffDate and at least 4 days old
+          // after cutoff date AND at least 4 days old
           return refundDate.isAfter(cutoffDate) && diffInDays >= 4;
         })
+
         .map((row, idx) => ({
           order_id: row[0],
           refund_form_date: row[1],
@@ -102,7 +113,7 @@ function Formcheck() {
 
   const handleUpdateOrder = async (orderData) => {
     if (!orderData) return;
-
+    console.log(orderData);
     setLoading(true); // You should define setIsLoading and alert in your component
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
@@ -114,7 +125,7 @@ function Formcheck() {
       if (!rows) return alert("No data found.");
 
       const rowIndex = rows.findIndex(
-        (row) => row[0]?.toString() === orderData.order_id?.toString()
+        (row) => row[0]?.toString() === orderData.order_id?.toString(),
       );
       if (rowIndex === -1) return alert("Order ID नहीं मिला ❌❌");
 
@@ -136,7 +147,7 @@ function Formcheck() {
                 orderData.Less_amount || "",
                 "", // paid_amount left blank as per your code
                 orderData.payment || "",
-                orderData.notes || "",
+                orderData.Notes || "",
                 orderData.form || "",
               ],
             ],
@@ -202,7 +213,8 @@ function Formcheck() {
               <th>Order ID</th>
               <th>Form</th>
               <th>Amount</th>
-              {/* <th>Update</th> */}
+
+              <th>Update</th>
             </tr>
           </thead>
           <tbody>
@@ -236,9 +248,17 @@ function Formcheck() {
                   <td>
                     <select
                       value={order.form}
-                      onChange={(e) =>
-                        handleChange(index, "form", e.target.value)
-                      }
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        if (value === "wrong") {
+                          setActiveIndex(index);
+                          setReasonText(order.Notes || "");
+                          setShowReasonModal(true);
+                        }
+
+                        handleChange(index, "form", value);
+                      }}
                     >
                       <option value="">Status</option>
                       <option value="ok">Ok</option>
@@ -256,6 +276,7 @@ function Formcheck() {
                       }
                     />
                   </td>
+
                   <td>
                     <button onClick={() => handleUpdateOrder(order)}>
                       Update
@@ -266,6 +287,62 @@ function Formcheck() {
           </tbody>
         </table>
       )}
+      {showReasonModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              padding: "20px",
+              borderRadius: "8px",
+              width: "300px",
+            }}
+          >
+            <h3>❌ Reason for Wrong</h3>
+
+            <textarea
+              style={{ width: "100%", minHeight: "80px" }}
+              placeholder="Enter reason..."
+              value={reasonText}
+              onChange={(e) => setReasonText(e.target.value)}
+            />
+
+            <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => {
+                  handleChange(activeIndex, "Notes", reasonText);
+                  setShowReasonModal(false);
+                  setReasonText("");
+                }}
+              >
+                Save
+              </button>
+
+              <button
+                onClick={() => {
+                  handleChange(activeIndex, "form", "");
+                  setShowReasonModal(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modalMessage && <div className="modal">{modalMessage}</div>}
     </div>
   );
