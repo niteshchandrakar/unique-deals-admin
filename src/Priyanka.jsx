@@ -57,6 +57,7 @@ function Priyanka() {
 
       const filteredOrders = rows
         .filter((row) => row[2] === "")
+        .filter((row) => row[7] === "" || row[7] === "pending")
         //  .filter((row) => row[2] === "" || row[4] === "")
         .map((row, idx) => ({
           order_id: row[0],
@@ -103,7 +104,7 @@ function Priyanka() {
       if (!rows) return alert("No data found.");
 
       const rowIndex = rows.findIndex(
-        (row) => row[0]?.toString() === orderData.order_id?.toString()
+        (row) => row[0]?.toString() === orderData.order_id?.toString(),
       );
       if (rowIndex === -1) return alert("Order ID नहीं मिला ❌❌");
 
