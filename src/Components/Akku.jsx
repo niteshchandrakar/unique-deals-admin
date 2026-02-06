@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { gapi } from "gapi-script";
+import dayjs from "dayjs";
 
 const CLIENT_ID =
   "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
@@ -19,8 +20,6 @@ function Akku() {
   const [loading, setLoading] = useState(false);
   const [apiReady, setApiReady] = useState(false);
 
-  // ✅ INIT GAPI HERE
-  console.log(orders);
   useEffect(() => {
     function start() {
       gapi.client
@@ -67,7 +66,6 @@ function Akku() {
 
         return whatsapp === searchNumber && validPayments.includes(payment);
       });
-      console.log(matches, "m");
 
       const keys = [
         "order_id",
@@ -118,25 +116,120 @@ function Akku() {
       {loading && <p>Loading...</p>}
 
       {orders.length > 0 && (
-        <table border="1">
-          <thead>
-            <tr>
-              {Object.keys(orders[0]).map((key) => (
-                <th key={key}>{key}</th>
-              ))}
-            </tr>
-          </thead>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {orders.length > 0 && (
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
+              {orders.length > 0 && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
+                  {orders.map((order, i) => {
+                    const daysAgo = order.refund_form_date
+                      ? dayjs().diff(dayjs(order.refund_form_date), "day")
+                      : "-";
 
-          <tbody>
-            {orders.map((order, i) => (
-              <tr key={i}>
-                {Object.values(order).map((val, idx) => (
-                  <td key={idx}>{val}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    // payment badge color
+                    const paymentColor =
+                      order.payment === "pending"
+                        ? "black"
+                        : order.payment === "hold"
+                          ? "red"
+                          : order.payment === "cancel"
+                            ? "red"
+                            : order.payment === "seller given"
+                              ? "#3ebaef"
+                              : "black";
+
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          border: "1px solid #ddd",
+                          borderRadius: "10px",
+                          padding: "12px",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                          background: "#fff",
+                        }}
+                      >
+                        {/* ORDER ID */}
+                        <div style={{ fontWeight: "bold", fontSize: "18px" }}>
+                          {order.order_id}
+                        </div>
+
+                        {/* MEDIATOR */}
+                        <div style={{ color: "#555", marginTop: "2px" }}>
+                          👤 {order.mediator || "-"}
+                        </div>
+
+                        {/* DAYS AGO */}
+                        <div
+                          style={{
+                            marginTop: "4px",
+                            color: "red",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          🔥 {daysAgo} days ago
+                        </div>
+
+                        <div
+                          style={{
+                            marginTop: "6px",
+                            display: "inline-block",
+                            background: paymentColor,
+                            color: "#fff",
+                            padding: "2px 8px",
+                            borderRadius: "6px",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {order.payment ? order.payment : "pending"}
+                        </div>
+
+                        {/* AMOUNTS */}
+                        <div
+                          style={{
+                            marginTop: "8px",
+                            display: "flex",
+                            gap: "12px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span>
+                            <strong>Order:</strong> ₹{order.order_amount || "0"}
+                          </span>
+                          <span>
+                            <strong>Less:</strong> ₹{order.less_amount || "0"}
+                          </span>
+                          <span>
+                            <strong>Paid:</strong> ₹{order.paid_amount || "0"}
+                          </span>
+                        </div>
+
+                        {/* FORM VALUE */}
+                        <div style={{ marginTop: "6px" }}>
+                          <strong>Form:</strong> {order.form || "-"}
+                        </div>
+
+                        {/* NOTES */}
+                        <div style={{ marginTop: "4px" }}>
+                          <strong>Notes:</strong> {order.notes || "-"}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
