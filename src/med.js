@@ -10,13 +10,13 @@ const med = [
   "manish",
   "med 25",
   "dcm",
-  "mcs",
+
   "nikhil",
   "anshul",
   "kiwi",
-  "raghav",
+
   "tqm",
-  "gaurav",
+
   "nahi-mila",
 ];
 

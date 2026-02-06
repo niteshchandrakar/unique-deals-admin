@@ -3,6 +3,7 @@ import { gapi } from "gapi-script";
 import dayjs from "dayjs";
 import "./App.css";
 import med from "./med";
+import { Link } from "react-router-dom";
 const CLIENT_ID =
   "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
 const API_KEY = "AIzaSyDScP5GlWBV1kA8k0cfLK6r7JvRHRqqOJU";
@@ -85,7 +86,7 @@ function Admin() {
         ];
         const orderObject = keys.reduce(
           (acc, key, index) => ({ ...acc, [key]: foundOrders[0][index] || "" }),
-          {}
+          {},
         );
         setOrderData(orderObject);
         showModal("Order Mil Gaya✅✅");
@@ -154,6 +155,7 @@ function Admin() {
 
   return (
     <div className="admin-container">
+      <Link to="/akku">Akku</Link>
       <h1>
         Refund Management{" "}
         <span
