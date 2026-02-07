@@ -19,7 +19,14 @@ function Akku() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [apiReady, setApiReady] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
+  const showModal = (message) => {
+    setModalMessage(message);
+    setTimeout(() => setModalMessage(""), 3000);
+  };
+
+  // INIT GOOGLE API
   useEffect(() => {
     function start() {
       gapi.client
@@ -29,24 +36,15 @@ function Akku() {
           discoveryDocs: [DISCOVERY_DOC],
           scope: SCOPE,
         })
-        .then(() => {
-          setApiReady(true);
-        });
+        .then(() => setApiReady(true));
     }
-
     gapi.load("client:auth2", start);
   }, []);
 
+  // FETCH ORDERS
   const fetchOrdersByWhatsapp = async () => {
-    if (!apiReady) {
-      alert("Google API loading...");
-      return;
-    }
-
-    if (!searchNumber) {
-      alert("Number daalo");
-      return;
-    }
+    if (!apiReady) return alert("Google API loading...");
+    if (!searchNumber) return alert("Number daalo");
 
     setLoading(true);
 
@@ -63,7 +61,6 @@ function Akku() {
       const matches = rows.filter((row) => {
         const whatsapp = row[3];
         const payment = (row[7] || "").toLowerCase();
-
         return whatsapp === searchNumber && validPayments.includes(payment);
       });
 
@@ -93,11 +90,51 @@ function Akku() {
 
       setOrders(formattedOrders);
     } catch (err) {
-      console.log("FULL ERROR:", err);
-      alert(err.result?.error?.message || err.message);
+      console.log(err);
+      alert("Fetch error");
     }
 
     setLoading(false);
+  };
+
+  // UPDATE ORDER
+  const handleUpdateOrder = async (order) => {
+    try {
+      const response = await gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: "Sheet1!A2:A",
+      });
+
+      const rows = response.result.values || [];
+
+      const rowIndex = rows.findIndex((row) => row[0] === order.order_id);
+
+      if (rowIndex === -1) return alert("Order id ni mila");
+
+      const actualRowNumber = rowIndex + 2;
+
+      await gapi.client.sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `Sheet1!E${actualRowNumber}:I${actualRowNumber}`,
+        valueInputOption: "USER_ENTERED",
+        resource: {
+          values: [
+            [
+              order.order_amount,
+              order.less_amount,
+              order.paid_amount,
+              order.payment,
+              order.notes,
+            ],
+          ],
+        },
+      });
+
+      showModal("✅ Update ho gaya 🔥");
+    } catch (err) {
+      console.log(err);
+      alert("Update error");
+    }
   };
 
   return (
@@ -115,120 +152,141 @@ function Akku() {
 
       {loading && <p>Loading...</p>}
 
-      {orders.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {orders.length > 0 && (
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        {orders.map((order, i) => {
+          const daysAgo = order.refund_form_date
+            ? dayjs().diff(dayjs(order.refund_form_date), "day")
+            : "-";
+
+          return (
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+              key={i}
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "10px",
+                padding: "12px",
+              }}
             >
-              {orders.length > 0 && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "12px",
+              <b
+                style={{
+                  cursor: "pointer",
+                  userSelect: "none",
+                  color: "#007bff",
+                }}
+                onClick={() => {
+                  navigator.clipboard.writeText(order.order_id);
+
+                  // 👇 same modal use karo
+                  showModal(`${order.order_id}`);
+                }}
+              >
+                {order.order_id}
+              </b>
+
+              <div style={{ display: "flex", justifyContent: "space-around" }}>
+                <div>👤 {order.mediator}</div>
+
+                <div>🔥 {daysAgo} days ago</div>
+              </div>
+
+              <div style={{ display: "flex" }}>
+                <p>Payment:</p>
+                <select
+                  value={order.payment}
+                  onChange={(e) => {
+                    const updated = [...orders];
+                    updated[i].payment = e.target.value;
+                    setOrders(updated);
                   }}
                 >
-                  {orders.map((order, i) => {
-                    const daysAgo = order.refund_form_date
-                      ? dayjs().diff(dayjs(order.refund_form_date), "day")
-                      : "-";
+                  <option value="">pending</option>
+                  <option value="me given">me given</option>
+                  <option value="cancel">cancel</option>
+                  <option value="a complete"> a complete</option>
+                </select>
+              </div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: "8px",
+                  alignItems: "center",
+                  marginTop: "8px",
+                }}
+              >
+                {/* Headers */}
+                <div style={labelStyle}>Order Am</div>
+                <div style={labelStyle}>Less</div>
+                <div style={labelStyle}>Paid</div>
 
-                    // payment badge color
-                    const paymentColor =
-                      order.payment === "pending"
-                        ? "black"
-                        : order.payment === "hold"
-                          ? "red"
-                          : order.payment === "cancel"
-                            ? "red"
-                            : order.payment === "seller given"
-                              ? "#3ebaef"
-                              : "black";
+                {/* Inputs */}
+                <input
+                  style={inputStyle}
+                  value={order.order_amount}
+                  onChange={(e) => {
+                    const updated = [...orders];
+                    updated[i].order_amount = e.target.value;
+                    setOrders(updated);
+                  }}
+                />
 
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          border: "1px solid #ddd",
-                          borderRadius: "10px",
-                          padding: "12px",
-                          boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                          background: "#fff",
-                        }}
-                      >
-                        {/* ORDER ID */}
-                        <div style={{ fontWeight: "bold", fontSize: "18px" }}>
-                          {order.order_id}
-                        </div>
+                <input
+                  style={inputStyle}
+                  value={order.less_amount}
+                  onChange={(e) => {
+                    const updated = [...orders];
+                    updated[i].less_amount = e.target.value;
+                    setOrders(updated);
+                  }}
+                />
 
-                        {/* MEDIATOR */}
-                        <div style={{ color: "#555", marginTop: "2px" }}>
-                          👤 {order.mediator || "-"}
-                        </div>
+                <input
+                  style={inputStyle}
+                  value={order.paid_amount}
+                  onChange={(e) => {
+                    const updated = [...orders];
+                    updated[i].paid_amount = e.target.value;
+                    setOrders(updated);
+                  }}
+                />
+              </div>
 
-                        {/* DAYS AGO */}
-                        <div
-                          style={{
-                            marginTop: "4px",
-                            color: "red",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          🔥 {daysAgo} days ago
-                        </div>
+              <div>
+                <textarea
+                  value={order.notes}
+                  onChange={(e) => {
+                    const updated = [...orders];
+                    updated[i].notes = e.target.value;
+                    setOrders(updated);
+                  }}
+                />
+              </div>
 
-                        <div
-                          style={{
-                            marginTop: "6px",
-                            display: "inline-block",
-                            background: paymentColor,
-                            color: "#fff",
-                            padding: "2px 8px",
-                            borderRadius: "6px",
-                            fontSize: "12px",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {order.payment ? order.payment : "pending"}
-                        </div>
-
-                        {/* AMOUNTS */}
-                        <div
-                          style={{
-                            marginTop: "8px",
-                            display: "flex",
-                            gap: "12px",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          <span>
-                            <strong>Order:</strong> ₹{order.order_amount || "0"}
-                          </span>
-                          <span>
-                            <strong>Less:</strong> ₹{order.less_amount || "0"}
-                          </span>
-                          <span>
-                            <strong>Paid:</strong> ₹{order.paid_amount || "0"}
-                          </span>
-                        </div>
-
-                        {/* FORM VALUE */}
-                        <div style={{ marginTop: "6px" }}>
-                          <strong>Form:</strong> {order.form || "-"}
-                        </div>
-
-                        {/* NOTES */}
-                        <div style={{ marginTop: "4px" }}>
-                          <strong>Notes:</strong> {order.notes || "-"}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <button onClick={() => handleUpdateOrder(order)}>Update</button>
             </div>
-          )}
+          );
+        })}
+      </div>
+      {modalMessage && (
+        <div
+          style={{
+            position: "fixed",
+            top: "80px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "#111",
+            color: "#fff",
+            padding: "12px 18px",
+            borderRadius: "12px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            fontSize: "14px",
+            zIndex: 9999,
+            animation: "fadeInUp 0.3s ease",
+            maxWidth: "90%",
+            textAlign: "center",
+          }}
+        >
+          {modalMessage}
         </div>
       )}
     </div>
@@ -236,3 +294,15 @@ function Akku() {
 }
 
 export default Akku;
+const labelStyle = {
+  fontSize: "12px",
+  fontWeight: "600",
+  color: "#555",
+};
+
+const inputStyle = {
+  width: "50px",
+  padding: "10px",
+  borderRadius: "8px",
+  border: "1px solid #ddd",
+};
