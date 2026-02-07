@@ -122,7 +122,7 @@ function Akku() {
             [
               order.order_amount,
               order.less_amount,
-              order.paid_amount,
+              "",
               order.payment,
               order.notes,
             ],
@@ -243,11 +243,7 @@ function Akku() {
                 <input
                   style={inputStyle}
                   value={order.paid_amount}
-                  onChange={(e) => {
-                    const updated = [...orders];
-                    updated[i].paid_amount = e.target.value;
-                    setOrders(updated);
-                  }}
+                  onChange={(e) => {}}
                 />
               </div>
 
