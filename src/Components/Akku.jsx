@@ -23,7 +23,7 @@ function Akku() {
 
   const showModal = (message) => {
     setModalMessage(message);
-    setTimeout(() => setModalMessage(""), 3000);
+    setTimeout(() => setModalMessage(""), 2000);
   };
 
   // INIT GOOGLE API
@@ -130,7 +130,7 @@ function Akku() {
         },
       });
 
-      showModal("✅ Update ho gaya 🔥");
+      showModal("✅ Update ho gaya");
     } catch (err) {
       console.log(err);
       alert("Update error");
@@ -138,61 +138,54 @@ function Akku() {
   };
 
   return (
-    <div>
-      <h2>Search Orders By Whatsapp Number</h2>
+    <div style={containerStyle}>
+      {/* HEADER */}
+      <div style={headerStyle}>
+        <div style={searchBox}>
+          <input
+            type="text"
+            placeholder="Enter whatsapp number"
+            value={searchNumber}
+            onChange={(e) => setSearchNumber(e.target.value)}
+            style={searchInput}
+          />
 
-      <input
-        type="text"
-        placeholder="Enter whatsapp number"
-        value={searchNumber}
-        onChange={(e) => setSearchNumber(e.target.value)}
-      />
+          <button onClick={fetchOrdersByWhatsapp} style={searchBtn}>
+            🔍
+          </button>
+        </div>
+      </div>
 
-      <button onClick={fetchOrdersByWhatsapp}>Search</button>
+      {loading && <p style={{ textAlign: "center" }}>Loading...</p>}
 
-      {loading && <p>Loading...</p>}
-
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div style={cardWrapper}>
         {orders.map((order, i) => {
           const daysAgo = order.refund_form_date
             ? dayjs().diff(dayjs(order.refund_form_date), "day")
             : "-";
 
           return (
-            <div
-              key={i}
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "10px",
-                padding: "12px",
-              }}
-            >
-              <b
-                style={{
-                  cursor: "pointer",
-                  userSelect: "none",
-                  color: "#007bff",
-                }}
-                onClick={() => {
-                  navigator.clipboard.writeText(order.order_id);
+            <div key={i} style={card}>
+              <div style={rowBetween}>
+                <b
+                  style={orderId}
+                  onClick={() => {
+                    navigator.clipboard.writeText(order.order_id);
+                    showModal(order.order_id);
+                  }}
+                >
+                  {order.order_id}
+                </b>
 
-                  // 👇 same modal use karo
-                  showModal(`${order.order_id}`);
-                }}
-              >
-                {order.order_id}
-              </b>
-
-              <div style={{ display: "flex", justifyContent: "space-around" }}>
-                <div>👤 {order.mediator}</div>
-
-                <div>🔥 {daysAgo} days ago</div>
+                <span style={daysBadge}>🔥 {daysAgo}d</span>
               </div>
 
-              <div style={{ display: "flex" }}>
-                <p>Payment:</p>
+              <div style={rowBetween}>
+                <span style={{ width: "150px" }}>👤 {order.mediator}</span>
+
                 <select
                   value={order.payment}
+                  style={selectStyle}
                   onChange={(e) => {
                     const updated = [...orders];
                     updated[i].payment = e.target.value;
@@ -202,26 +195,14 @@ function Akku() {
                   <option value="">pending</option>
                   <option value="me given">me given</option>
                   <option value="cancel">cancel</option>
-                  <option value="a complete"> a complete</option>
+                  <option value="a complete">complete</option>
                 </select>
               </div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr 1fr",
-                  gap: "8px",
-                  alignItems: "center",
-                  marginTop: "8px",
-                }}
-              >
-                {/* Headers */}
-                <div style={labelStyle}>Order Am</div>
-                <div style={labelStyle}>Less</div>
-                <div style={labelStyle}>Paid</div>
 
-                {/* Inputs */}
+              <div style={amountGrid}>
                 <input
-                  style={inputStyle}
+                  placeholder="Order"
+                  style={inputMobile}
                   value={order.order_amount}
                   onChange={(e) => {
                     const updated = [...orders];
@@ -231,7 +212,8 @@ function Akku() {
                 />
 
                 <input
-                  style={inputStyle}
+                  placeholder="Less"
+                  style={inputMobile}
                   value={order.less_amount}
                   onChange={(e) => {
                     const updated = [...orders];
@@ -241,90 +223,177 @@ function Akku() {
                 />
 
                 <input
-                  style={inputStyle}
+                  placeholder="Paid"
+                  style={inputMobile}
                   value={order.paid_amount}
-                  onChange={(e) => {}}
+                  readOnly
                 />
               </div>
 
-              <div
-                style={{
-                  marginTop: "5px",
-                  display: "flex",
-                  justifyContent: "space-around",
+              <textarea
+                placeholder="Notes..."
+                style={textareaStyle}
+                value={order.notes}
+                onChange={(e) => {
+                  const updated = [...orders];
+                  updated[i].notes = e.target.value;
+                  setOrders(updated);
                 }}
-              >
-                <textarea
-                  value={order.notes}
-                  onChange={(e) => {
-                    const updated = [...orders];
-                    updated[i].notes = e.target.value;
-                    setOrders(updated);
-                  }}
-                />
-                <div
-                  style={{
-                    padding: "6px 10px",
-                    borderRadius: "8px",
-                    color: "#fff",
-                    fontWeight: "600",
-                    fontSize: "13px",
-                    display: "inline-block",
-                    background:
-                      order.form?.toLowerCase() === "ok"
-                        ? "#28a745"
-                        : order.form?.toLowerCase() === "not access"
-                          ? "#007bff"
-                          : order.form?.toLowerCase() === "wrong"
-                            ? "#dc3545"
-                            : "#999",
-                  }}
-                >
-                  form: {order.form}
-                </div>
-              </div>
+              />
 
-              <button onClick={() => handleUpdateOrder(order)}>Update</button>
+              <div style={rowBetween}>
+                <div style={formBadge(order.form)}>form: {order.form}</div>
+
+                <button
+                  onClick={() => handleUpdateOrder(order)}
+                  style={updateBtn}
+                >
+                  Update
+                </button>
+              </div>
             </div>
           );
         })}
       </div>
-      {modalMessage && (
-        <div
-          style={{
-            position: "fixed",
-            top: "80px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "#111",
-            color: "#fff",
-            padding: "12px 18px",
-            borderRadius: "12px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-            fontSize: "14px",
-            zIndex: 9999,
-            animation: "fadeInUp 0.3s ease",
-            maxWidth: "90%",
-            textAlign: "center",
-          }}
-        >
-          {modalMessage}
-        </div>
-      )}
+
+      {modalMessage && <div style={toast}>{modalMessage}</div>}
     </div>
   );
 }
 
 export default Akku;
-const labelStyle = {
-  fontSize: "12px",
-  fontWeight: "600",
-  color: "#555",
+
+/* ================== STYLES ================== */
+
+const containerStyle = {
+  padding: "12px",
+  background: "#f4f6f8",
+  minHeight: "100vh",
 };
 
-const inputStyle = {
-  width: "50px",
-  padding: "10px",
-  borderRadius: "8px",
+const headerStyle = {
+  position: "sticky",
+  top: 0,
+  background: "#fff",
+  paddingBottom: "10px",
+  zIndex: 10,
+};
+
+const searchBox = {
+  display: "flex",
+  gap: "8px",
+  marginTop: "8px",
+};
+
+const searchInput = {
+  flex: 1,
+  padding: "14px",
+  borderRadius: "12px",
   border: "1px solid #ddd",
+  fontSize: "16px",
+  width: "200px",
+};
+
+const searchBtn = {
+  padding: "14px 18px",
+  borderRadius: "12px",
+  border: "none",
+  background: "#000",
+  color: "#fff",
+  fontSize: "16px",
+};
+
+const cardWrapper = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px",
+  marginTop: "10px",
+};
+
+const card = {
+  background: "#fff",
+  padding: "14px",
+  borderRadius: "16px",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
+};
+
+const rowBetween = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "10px",
+};
+
+const orderId = {
+  fontSize: "15px",
+  color: "#007bff",
+  cursor: "pointer",
+};
+
+const daysBadge = {
+  background: "#000",
+  color: "#fff",
+  padding: "4px 10px",
+  borderRadius: "20px",
+  fontSize: "12px",
+};
+
+const amountGrid = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr 1fr",
+  gap: "8px",
+};
+
+const inputMobile = {
+  padding: "12px",
+  borderRadius: "10px",
+  border: "1px solid #ddd",
+};
+
+const textareaStyle = {
+  width: "100%",
+  marginTop: "10px",
+  padding: "12px",
+  borderRadius: "12px",
+  border: "1px solid #ddd",
+};
+
+const selectStyle = {
+  padding: "8px",
+  borderRadius: "8px",
+};
+
+const updateBtn = {
+  background: "#000000",
+  border: "none",
+  color: "#fff",
+  padding: "10px 16px",
+  borderRadius: "10px",
+  width: "150px",
+};
+
+const formBadge = (form) => ({
+  background:
+    form?.toLowerCase() === "ok"
+      ? "#28a745"
+      : form?.toLowerCase() === "not access"
+        ? "#007bff"
+        : form?.toLowerCase() === "wrong"
+          ? "#dc3545"
+          : "#999",
+  color: "#fff",
+  padding: "8px 10px",
+  borderRadius: "10px",
+  width: "120px",
+});
+
+const toast = {
+  position: "fixed",
+  top: "150px",
+  left: "50%",
+  transform: "translateX(-50%)",
+  background: "#000",
+  color: "#fff",
+  padding: "10px 16px",
+  borderRadius: "12px",
 };
