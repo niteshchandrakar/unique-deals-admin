@@ -251,7 +251,13 @@ function Akku() {
                 />
               </div>
 
-              <div>
+              <div
+                style={{
+                  marginTop: "5px",
+                  display: "flex",
+                  justifyContent: "space-around",
+                }}
+              >
                 <textarea
                   value={order.notes}
                   onChange={(e) => {
@@ -260,6 +266,26 @@ function Akku() {
                     setOrders(updated);
                   }}
                 />
+                <div
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: "8px",
+                    color: "#fff",
+                    fontWeight: "600",
+                    fontSize: "13px",
+                    display: "inline-block",
+                    background:
+                      order.form?.toLowerCase() === "ok"
+                        ? "#28a745"
+                        : order.form?.toLowerCase() === "not access"
+                          ? "#007bff"
+                          : order.form?.toLowerCase() === "wrong"
+                            ? "#dc3545"
+                            : "#999",
+                  }}
+                >
+                  form: {order.form}
+                </div>
               </div>
 
               <button onClick={() => handleUpdateOrder(order)}>Update</button>
