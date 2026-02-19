@@ -45,6 +45,7 @@ function Akku() {
   const [loading, setLoading] = useState(false);
   const [apiReady, setApiReady] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const [copiedOrderId, setCopiedOrderId] = useState(null);
 
   const showModal = (message) => {
     setModalMessage(message);
@@ -240,12 +241,26 @@ function Akku() {
             : "-";
 
           return (
-            <div key={i} style={card}>
+            <div
+              key={i}
+              style={{
+                ...card,
+                background:
+                  copiedOrderId === order.order_id
+                    ? "#e6f7ff"
+                    : card.background,
+                border:
+                  copiedOrderId === order.order_id
+                    ? "2px solid #1890ff"
+                    : "none",
+              }}
+            >
               <div style={rowBetween}>
                 <b
                   style={orderId}
                   onClick={() => {
                     navigator.clipboard.writeText(order.order_id);
+                    setCopiedOrderId(order.order_id); // ⭐ add this
                     showModal(order.order_id);
                   }}
                 >
@@ -262,6 +277,7 @@ function Akku() {
                     onClick={() => {
                       navigator.clipboard.writeText(order.order_id);
                       window.open(mediatorSheets[order.mediator], "_blank");
+                      setCopiedOrderId(order.order_id); // ⭐ add this
                     }}
                     style={{
                       background: "#34a853",
@@ -445,7 +461,7 @@ const inputMobile = {
 };
 
 const textareaStyle = {
-  width: "100%",
+  width: "300px",
   marginTop: "10px",
   padding: "12px",
   borderRadius: "12px",
