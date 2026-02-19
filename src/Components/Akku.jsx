@@ -84,6 +84,7 @@ function Akku() {
 
       const rows = response.result.values || [];
 
+      // Filter matching whatsapp + valid payments
       const matches = rows.filter((row) => {
         const whatsapp = row[3];
         const payment = (row[7] || "").toLowerCase();
@@ -107,12 +108,24 @@ function Akku() {
         "BrandName",
       ];
 
-      const formattedOrders = matches.map((row) =>
-        keys.reduce((acc, key, index) => {
-          if (key) acc[key] = row[index] || "";
-          return acc;
-        }, {}),
-      );
+      // Map + Sort (Oldest First)
+      const formattedOrders = matches
+        .map((row) =>
+          keys.reduce((acc, key, index) => {
+            if (key) acc[key] = row[index] || "";
+            return acc;
+          }, {}),
+        )
+        .sort((a, b) => {
+          const dateA = a.refund_form_date ? dayjs(a.refund_form_date) : null;
+          const dateB = b.refund_form_date ? dayjs(b.refund_form_date) : null;
+
+          if (!dateA && !dateB) return 0;
+          if (!dateA) return 1; // null dates last me
+          if (!dateB) return -1;
+
+          return dateA.valueOf() - dateB.valueOf(); // oldest first
+        });
 
       setOrders(formattedOrders);
     } catch (err) {
