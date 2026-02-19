@@ -167,13 +167,63 @@ function Akku() {
       {/* HEADER */}
       <div style={headerStyle}>
         <div style={searchBox}>
-          <input
-            type="text"
-            placeholder="Enter whatsapp number"
-            value={searchNumber}
-            onChange={(e) => setSearchNumber(e.target.value)}
-            style={searchInput}
-          />
+          <div style={{ position: "relative", flex: 1 }}>
+            <input
+              type="text"
+              placeholder="Enter whatsapp number"
+              value={searchNumber}
+              onChange={(e) => setSearchNumber(e.target.value)}
+              style={searchInput}
+            />
+
+            {/* PASTE BUTTON */}
+
+            {/* CLEAR BUTTON (only if value exists) */}
+            {searchNumber ? (
+              <button
+                onClick={() => setSearchNumber("")}
+                style={{
+                  position: "absolute",
+                  right: "0px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  border: "none",
+                  background: "#ff4d4f",
+                  color: "#fff",
+                  padding: "5px 8px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  width: "25px",
+                }}
+              >
+                ✕
+              </button>
+            ) : (
+              <button
+                onClick={async () => {
+                  const text = await navigator.clipboard.readText();
+                  setSearchNumber(text);
+                }}
+                style={{
+                  position: "absolute",
+                  right: "0px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  border: "none",
+                  background: "#d6dec3",
+                  color: "#fff",
+                  padding: "5px 8px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  width: "30px",
+                }}
+              >
+                📋
+              </button>
+            )}
+          </div>
 
           <button onClick={fetchOrdersByWhatsapp} style={searchBtn}>
             🔍
@@ -209,9 +259,10 @@ function Akku() {
                 <span style={{ width: "150px" }}>👤 {order.mediator}</span>
                 {mediatorSheets[order.mediator] && (
                   <button
-                    onClick={() =>
-                      window.open(mediatorSheets[order.mediator], "_blank")
-                    }
+                    onClick={() => {
+                      navigator.clipboard.writeText(order.order_id);
+                      window.open(mediatorSheets[order.mediator], "_blank");
+                    }}
                     style={{
                       background: "#34a853",
                       border: "none",
