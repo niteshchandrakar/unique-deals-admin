@@ -13,6 +13,31 @@ const DISCOVERY_DOC =
 const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 
 const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
+const mediatorSheets = {
+  kkb: "https://docs.google.com/spreadsheets/d/18sMm_snwml5VmSdA9q2yGV5Dbb1z0Ot7Fu0JcLI61TA",
+  "Prince BGM":
+    "https://docs.google.com/spreadsheets/d/1QNWPDoLSOzUTKZDeci3KkV_vAJoL98xge6TjTcV8Nes",
+  "touch sky":
+    "https://docs.google.com/spreadsheets/d/1y_RKdwUM7Pk3iFxGdI-hq2fZqFTquJ9HRF0PfcMuLCQ",
+  anshul:
+    "https://docs.google.com/spreadsheets/d/1WDsXaHTXNZPMQrAXfQ0Q8lPjzh2mAhLXhcHTAs81aVQ",
+  naaz: "https://docs.google.com/spreadsheets/d/1dw1f8c5-FczgudaaerDGHVd7BzfQsj7avL10EuHNoBQ",
+  "brand boosters":
+    "https://docs.google.com/spreadsheets/d/1VhOScFOa5D7PsGZZ9Agg9q8-g76GxM5qiK-DZIjr-NI",
+  manish:
+    "https://docs.google.com/spreadsheets/d/1Z_WgxnlEq7f94wF2R-nGVWZzaSawA6BSfvvQ8QeOYSU",
+  adf: "https://docs.google.com/spreadsheets/d/1vHktKwrl3SFdMk2Rqb2s6vL-fpAIV9KkoKjxl3LBJ0U",
+
+  "med 25":
+    "https://docs.google.com/spreadsheets/d/1q05QmnAefZSOxccHUV-AI9-WoWS18yNWN1Ufk6A_6NU/edit?resourcekey=&gid=1302446889#gid=1302446889",
+  nikhil:
+    "https://docs.google.com/spreadsheets/d/17WkWvQU4xEcwGvmv4TpU6_GxyIjnUYCpkimIjSlQ7cg",
+  kiwi: "https://docs.google.com/spreadsheets/d/1xooDggsPQ9vjWeN2QqTuqZFhkPiF6NVmdpoKmCFfeXQ",
+  dabang:
+    "https://docs.google.com/spreadsheets/d/1kYQNydb_ve5gdvrpKfqW6OO-SoggpLB4_OS8T880diM",
+  cc: "https://docs.google.com/spreadsheets/d/1ciRRjdN_0QEJTmeqL62qkJs_IRP8LxC2KNMgGXCvSn8",
+  bgm: "https://docs.google.com/spreadsheets/d/1QNWPDoLSOzUTKZDeci3KkV_vAJoL98xge6TjTcV8Nes/edit?gid=1890964206#gid=1890964206",
+};
 
 function Akku() {
   const [searchNumber, setSearchNumber] = useState("");
@@ -182,6 +207,24 @@ function Akku() {
 
               <div style={rowBetween}>
                 <span style={{ width: "150px" }}>👤 {order.mediator}</span>
+                {mediatorSheets[order.mediator] && (
+                  <button
+                    onClick={() =>
+                      window.open(mediatorSheets[order.mediator], "_blank")
+                    }
+                    style={{
+                      background: "#34a853",
+                      border: "none",
+                      color: "#fff",
+                      padding: "5px 2px",
+                      borderRadius: "10px",
+                      width: "100px",
+                      fontSize: "10px",
+                    }}
+                  >
+                    Sheet
+                  </button>
+                )}
 
                 <select
                   value={order.payment}
