@@ -49,7 +49,7 @@ function Akku() {
 
   const showModal = (message) => {
     setModalMessage(message);
-    setTimeout(() => setModalMessage(""), 2000);
+    setTimeout(() => setModalMessage(""), 3000);
   };
 
   // INIT GOOGLE API
@@ -319,6 +319,7 @@ function Akku() {
                   <option value="me given">me given</option>
                   <option value="cancel">cancel</option>
                   <option value="a complete">complete</option>
+                  <option value="seller given">seller given</option>
                 </select>
               </div>
 
@@ -515,8 +516,8 @@ const toast = {
   top: "150px",
   left: "50%",
   transform: "translateX(-50%)",
-  background: "#000",
-  color: "#fff",
+  background: "#15ff00",
+  color: "#ff0000",
   padding: "10px 16px",
   borderRadius: "12px",
 };
