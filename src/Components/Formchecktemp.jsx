@@ -2,15 +2,79 @@ import { useEffect, useState } from "react";
 import { gapi } from "gapi-script";
 import dayjs from "dayjs";
 import med from "../med";
-const CLIENT_ID =
-  "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
-const API_KEY = "AIzaSyDScP5GlWBV1kA8k0cfLK6r7JvRHRqqOJU";
-const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
-const DISCOVERY_DOC =
-  "https://sheets.googleapis.com/$discovery/rest?version=v4";
-const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+import { CLIENT_ID, API_KEY, SHEET_ID, DISCOVERY_DOC, SCOPE } from "../config";
+const mediatorSheets = {
+  kkb: {
+    spreadsheetId: "18sMm_snwml5VmSdA9q2yGV5Dbb1z0Ot7Fu0JcLI61TA",
+    sheetName: "Refund Sheet",
+  },
 
-function Formcheck() {
+  "Prince BGM": {
+    spreadsheetId: "1QNWPDoLSOzUTKZDeci3KkV_vAJoL98xge6TjTcV8Nes",
+    sheetName: "Refund Sheet",
+  },
+
+  "touch sky": {
+    spreadsheetId: "1y_RKdwUM7Pk3iFxGdI-hq2fZqFTquJ9HRF0PfcMuLCQ",
+    sheetName: "Refund Sheet",
+  },
+
+  anshul: {
+    spreadsheetId: "1WDsXaHTXNZPMQrAXfQ0Q8lPjzh2mAhLXhcHTAs81aVQ",
+    sheetName: "Refund Sheet",
+  },
+
+  naaz: {
+    spreadsheetId: "1dw1f8c5-FczgudaaerDGHVd7BzfQsj7avL10EuHNoBQ",
+    sheetName: "Refund Sheet",
+  },
+
+  "brand boosters": {
+    spreadsheetId: "1VhOScFOa5D7PsGZZ9Agg9q8-g76GxM5qiK-DZIjr-NI",
+    sheetName: "Refund Sheet",
+  },
+
+  manish: {
+    spreadsheetId: "1Z_WgxnlEq7f94wF2R-nGVWZzaSawA6BSfvvQ8QeOYSU",
+    sheetName: "Refund Sheet",
+  },
+
+  adf: {
+    spreadsheetId: "1vHktKwrl3SFdMk2Rqb2s6vL-fpAIV9KkoKjxl3LBJ0U",
+    sheetName: "Refund Sheet",
+  },
+
+  "med 25": {
+    spreadsheetId: "1q05QmnAefZSOxccHUV-AI9-WoWS18yNWN1Ufk6A_6NU",
+    sheetName: "Refund Sheet",
+  },
+
+  nikhil: {
+    spreadsheetId: "17WkWvQU4xEcwGvmv4TpU6_GxyIjnUYCpkimIjSlQ7cg",
+    sheetName: "Refund Sheet",
+  },
+
+  kiwi: {
+    spreadsheetId: "1xooDggsPQ9vjWeN2QqTuqZFhkPiF6NVmdpoKmCFfeXQ",
+    sheetName: "Refund Sheet",
+  },
+
+  dabang: {
+    spreadsheetId: "1kYQNydb_ve5gdvrpKfqW6OO-SoggpLB4_OS8T880diM",
+    sheetName: "Refund Sheet",
+  },
+
+  cc: {
+    spreadsheetId: "1ciRRjdN_0QEJTmeqL62qkJs_IRP8LxC2KNMgGXCvSn8",
+    sheetName: "Refund Form",
+  },
+
+  bgm: {
+    spreadsheetId: "1QNWPDoLSOzUTKZDeci3KkV_vAJoL98xge6TjTcV8Nes",
+    sheetName: "refund sheet",
+  },
+};
+function Formchecktemp() {
   const [mediator, setMediator] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [orders, setOrders] = useState([]);
@@ -20,6 +84,27 @@ function Formcheck() {
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [reasonText, setReasonText] = useState("");
   const [activeIndex, setActiveIndex] = useState(null);
+  const searchOrder = async (mediator, orderId) => {
+    const config = mediatorSheets[mediator];
+
+    if (!config) {
+      console.log("Mediator config not found");
+      return false;
+    }
+
+    const { spreadsheetId, sheetName } = config;
+
+    const response = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: spreadsheetId,
+      range: `'${sheetName}'!A2:Z`,
+    });
+
+    const rows = response.result.values || [];
+
+    const found = rows.some((row) => row.includes(orderId));
+
+    return found;
+  };
 
   const showModal = (message) => {
     setModalMessage(message);
@@ -98,6 +183,15 @@ function Formcheck() {
         }));
 
       setOrders(filteredOrders);
+      for (const order of filteredOrders) {
+        const found = await searchOrder(mediator, order.order_id);
+
+        if (found) {
+          console.log(order.order_id, "YES");
+        } else {
+          console.log(order.order_id, "NO");
+        }
+      }
     } catch (error) {
       alert("Error fetching data: " + error.message);
     }
@@ -348,4 +442,4 @@ function Formcheck() {
   );
 }
 
-export default Formcheck;
+export default Formchecktemp;
