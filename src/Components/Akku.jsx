@@ -320,6 +320,7 @@ function Akku() {
                   <option value="cancel">cancel</option>
                   <option value="a complete">complete</option>
                   <option value="seller given">seller given</option>
+                  <option value="hold">hold</option>
                 </select>
               </div>
 
