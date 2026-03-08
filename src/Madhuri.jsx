@@ -68,6 +68,7 @@ function Madhuri() {
 
       {/* Conditional Component Rendering */}
       {active === "formCheck" && <Formcheck />}
+      {active === "formCheck2" && <Formchecktemp />}
       {active === "notFound" && <IdNotFound />}
       {active === "wrongForm" && <WrongForm />}
     </div>
