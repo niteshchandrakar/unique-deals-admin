@@ -114,6 +114,10 @@ function Formcheck() {
   const handleUpdateOrder = async (orderData) => {
     if (!orderData) return;
     console.log(orderData);
+    if (!orderData.order_amount) {
+      showModal("❌ Order amount fill karo");
+      return;
+    }
     setLoading(true); // You should define setIsLoading and alert in your component
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
