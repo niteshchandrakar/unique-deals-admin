@@ -312,6 +312,7 @@ function Akku() {
                   onChange={(e) => {
                     const updated = [...orders];
                     updated[i].payment = e.target.value;
+                    setCopiedOrderId(order.order_id); // ⭐ add this
                     setOrders(updated);
                   }}
                 >
