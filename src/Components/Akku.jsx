@@ -371,7 +371,10 @@ function Akku() {
                 <div style={formBadge(order.form)}>form: {order.form}</div>
 
                 <button
-                  onClick={() => handleUpdateOrder(order)}
+                  onClick={() => {
+                    handleUpdateOrder(order);
+                    setCopiedOrderId(order.order_id); // ⭐ add this
+                  }}
                   style={updateBtn}
                 >
                   Update
