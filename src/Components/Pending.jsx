@@ -62,7 +62,8 @@ function Pending() {
               row[2]?.toLowerCase() === mediator.toLowerCase()) &&
             row[7]?.toLowerCase() !== "a complete" &&
             row[7]?.toLowerCase() !== "cancel" &&
-            row[7]?.toLowerCase() !== "seller given"
+            row[7]?.toLowerCase() !== "seller given" &&
+            row[7]?.toLowerCase() !== "hold",
         )
 
         .sort((a, b) => {
@@ -70,12 +71,12 @@ function Pending() {
             dayjs(
               dateStr,
               ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
-              true
+              true,
             ).isValid()
               ? dayjs(
                   dateStr,
                   ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
-                  true
+                  true,
                 ).year(CURRENT_YEAR)
               : dayjs("1900-01-01");
           return parse(a[1]).unix() - parse(b[1]).unix();
@@ -85,7 +86,7 @@ function Pending() {
           refund_form_date: dayjs(
             row[1],
             ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
-            true
+            true,
           ).isValid()
             ? dayjs(row[1], ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"], true)
                 .year(CURRENT_YEAR)
@@ -127,7 +128,7 @@ function Pending() {
           (o) =>
             `${o.order_id}\t\t${formatDate(o.refund_form_date)}\t\t${
               o.BrandName || ""
-            }\n`
+            }\n`,
         )
         .join("\n");
     } else if (copyMode === "idAndDate") {
@@ -144,7 +145,7 @@ function Pending() {
           (o) =>
             `${o.order_id}\t\t${formatDate(o.refund_form_date)}\t\t${
               o.BrandName || ""
-            }\n`
+            }\n`,
         )
         .join("\n");
     } else {
