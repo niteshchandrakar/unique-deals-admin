@@ -9,6 +9,31 @@ const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
 const DISCOVERY_DOC =
   "https://sheets.googleapis.com/$discovery/rest?version=v4";
 const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+const mediatorSheets = {
+  kkb: "https://docs.google.com/spreadsheets/d/18sMm_snwml5VmSdA9q2yGV5Dbb1z0Ot7Fu0JcLI61TA",
+  "Prince BGM":
+    "https://docs.google.com/spreadsheets/d/1QNWPDoLSOzUTKZDeci3KkV_vAJoL98xge6TjTcV8Nes",
+  "touch sky":
+    "https://docs.google.com/spreadsheets/d/1y_RKdwUM7Pk3iFxGdI-hq2fZqFTquJ9HRF0PfcMuLCQ",
+  anshul:
+    "https://docs.google.com/spreadsheets/d/1WDsXaHTXNZPMQrAXfQ0Q8lPjzh2mAhLXhcHTAs81aVQ",
+  naaz: "https://docs.google.com/spreadsheets/d/1dw1f8c5-FczgudaaerDGHVd7BzfQsj7avL10EuHNoBQ",
+  "brand boosters":
+    "https://docs.google.com/spreadsheets/d/1VhOScFOa5D7PsGZZ9Agg9q8-g76GxM5qiK-DZIjr-NI",
+  manish:
+    "https://docs.google.com/spreadsheets/d/1Z_WgxnlEq7f94wF2R-nGVWZzaSawA6BSfvvQ8QeOYSU",
+  adf: "https://docs.google.com/spreadsheets/d/1vHktKwrl3SFdMk2Rqb2s6vL-fpAIV9KkoKjxl3LBJ0U",
+
+  "med 25":
+    "https://docs.google.com/spreadsheets/d/1q05QmnAefZSOxccHUV-AI9-WoWS18yNWN1Ufk6A_6NU/edit?resourcekey=&gid=1302446889#gid=1302446889",
+  nikhil:
+    "https://docs.google.com/spreadsheets/d/17WkWvQU4xEcwGvmv4TpU6_GxyIjnUYCpkimIjSlQ7cg",
+  kiwi: "https://docs.google.com/spreadsheets/d/1xooDggsPQ9vjWeN2QqTuqZFhkPiF6NVmdpoKmCFfeXQ",
+  dabang:
+    "https://docs.google.com/spreadsheets/d/1kYQNydb_ve5gdvrpKfqW6OO-SoggpLB4_OS8T880diM",
+  cc: "https://docs.google.com/spreadsheets/d/1ciRRjdN_0QEJTmeqL62qkJs_IRP8LxC2KNMgGXCvSn8",
+  bgm: "https://docs.google.com/spreadsheets/d/1QNWPDoLSOzUTKZDeci3KkV_vAJoL98xge6TjTcV8Nes/edit?gid=1890964206#gid=1890964206",
+};
 
 function Formcheck() {
   const [mediator, setMediator] = useState("");
@@ -169,11 +194,34 @@ function Formcheck() {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    const savedMediator = localStorage.getItem("mediator");
+    const savedOrderId = localStorage.getItem("clickedOrderId");
+
+    if (savedMediator) {
+      setMediator(savedMediator);
+    }
+
+    if (savedOrderId) {
+      setClickedOrderId(savedOrderId);
+    }
+  }, []);
+  useEffect(() => {
+    if (mediator && isAuthenticated) {
+      fetchOrders();
+    }
+  }, [mediator, isAuthenticated]);
   return (
     <div style={{ padding: "2px", position: "relative" }}>
       <h1>Order Filter by Mediator</h1>
       <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-        <select value={mediator} onChange={(e) => setMediator(e.target.value)}>
+        <select
+          value={mediator}
+          onChange={(e) => {
+            setMediator(e.target.value);
+            localStorage.setItem("mediator", e.target.value);
+          }}
+        >
           <option value="">Select Mediator</option>
           {med.map((opt) => (
             <option key={opt} value={opt}>
@@ -182,9 +230,26 @@ function Formcheck() {
           ))}
         </select>
 
-        <button style={{ width: "30%" }} onClick={fetchOrders}>
-          Fetch Orders
-        </button>
+        {mediatorSheets[mediator] && (
+          <div style={{ marginBottom: "10px" }}>
+            <button
+              onClick={() => {
+                window.open(mediatorSheets[mediator], "_blank");
+              }}
+              style={{
+                background: "#4285f4",
+                color: "#fff",
+                border: "none",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              {mediator} Sheet
+            </button>
+          </div>
+        )}
       </div>
       {loading && (
         <div
@@ -244,6 +309,8 @@ function Formcheck() {
                       navigator.clipboard.writeText(order.order_id);
                       showModal(order.order_id);
                       setClickedOrderId(order.order_id);
+                      // ✅ localStorage me save
+                      localStorage.setItem("clickedOrderId", order.order_id);
                     }}
                   >
                     {order.order_id}
