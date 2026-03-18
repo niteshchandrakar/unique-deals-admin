@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { gapi } from "gapi-script";
 import dayjs from "dayjs";
 import med from "../med";
@@ -76,7 +76,7 @@ function Formcheck() {
     }
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
@@ -84,31 +84,12 @@ function Formcheck() {
       });
 
       const rows = response.result.values || [];
-      // const today = dayjs();
+
       const filteredOrders = rows
-        // mediator match (case-insensitive)
         .filter((row) => row[2]?.toLowerCase() === mediator.toLowerCase())
-
-        // payment: empty OR pending
         .filter((row) => row[7] === "" || row[7] === "pending")
-
-        // other empty condition
         .filter((row) => row[9] === "")
-
-        .filter((row) => {
-          const refundDate = dayjs(row[1], "M/D/YYYY"); // refund date
-          const cutoffDate = dayjs("09/01/2025", "MM/DD/YYYY"); // 1 Sept 2025
-          const today = dayjs();
-
-          if (!refundDate.isValid()) return false;
-
-          const diffInDays = today.diff(refundDate, "day");
-
-          // after cutoff date AND at least 4 days old
-          return refundDate.isAfter(cutoffDate) && diffInDays >= 4;
-        })
-
-        .map((row, idx) => ({
+        .map((row) => ({
           order_id: row[0],
           refund_form_date: row[1],
           Mediator: row[2],
@@ -126,7 +107,7 @@ function Formcheck() {
     } catch (error) {
       alert("Error fetching data: " + error.message);
     }
-  };
+  }, [mediator]);
 
   const handleChange = (index, field, value) => {
     setOrders((prev) => {
@@ -210,7 +191,7 @@ function Formcheck() {
     if (mediator && isAuthenticated) {
       fetchOrders();
     }
-  }, [mediator, isAuthenticated]);
+  }, [mediator, isAuthenticated, fetchOrders]);
   return (
     <div style={{ padding: "2px", position: "relative" }}>
       <h1>Order Filter by Mediator</h1>
