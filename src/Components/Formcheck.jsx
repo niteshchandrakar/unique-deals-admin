@@ -33,6 +33,8 @@ const mediatorSheets = {
     "https://docs.google.com/spreadsheets/d/1kYQNydb_ve5gdvrpKfqW6OO-SoggpLB4_OS8T880diM",
   cc: "https://docs.google.com/spreadsheets/d/1ciRRjdN_0QEJTmeqL62qkJs_IRP8LxC2KNMgGXCvSn8",
   bgm: "https://docs.google.com/spreadsheets/d/1QNWPDoLSOzUTKZDeci3KkV_vAJoL98xge6TjTcV8Nes/edit?gid=1890964206#gid=1890964206",
+  dcm: "https://docs.google.com/spreadsheets/d/1I18dRy910LuclvfnT3xT2gHtCHrKVoKYb1ookextpF8/edit?gid=0#gid=0",
+  pgs: "https://docs.google.com/spreadsheets/d/1ckya0ubPo6eItkQm7kauiv2gvuyOC8VMsJxMEY1M9bo/edit?resourcekey=&gid=1276464152#gid=1276464152",
 };
 
 function Formcheck() {
