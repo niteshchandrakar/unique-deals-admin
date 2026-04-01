@@ -30,8 +30,8 @@ function App() {
         <Link to="/priyanka" style={buttonStyle}>
           Priyanka
         </Link>
-        <Link to="/madhuri" style={buttonStyle}>
-          Madhuri
+        <Link to="/pooja" style={buttonStyle}>
+          Pooja
         </Link>
         <Link to="/seller" style={buttonStyle}>
           Seller

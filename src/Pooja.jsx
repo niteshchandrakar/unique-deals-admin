@@ -4,7 +4,7 @@ import IdNotFound from "./Components/IdNotFound";
 import WrongForm from "./Components/WrongForm";
 import Formchecktemp from "./Components/Formchecktemp";
 
-function Madhuri() {
+function Pooja() {
   const [active, setActive] = useState("formCheck"); // default selected
 
   const buttonStyle = {
@@ -75,4 +75,4 @@ function Madhuri() {
   );
 }
 
-export default Madhuri;
+export default Pooja;
