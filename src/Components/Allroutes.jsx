@@ -6,6 +6,7 @@ import Priyanka from "../Priyanka";
 import SellerUpdate from "./SellerUpdate";
 import Akku from "./Akku";
 import Pooja from "../Pooja";
+import Madhuri from "./Madhuri/Madhuri";
 
 function Allroutes() {
   return (
@@ -15,6 +16,7 @@ function Allroutes() {
       <Route path="/pending" element={<Pending />} />
       <Route path="/priyanka" element={<Priyanka />} />
       <Route path="/pooja" element={<Pooja />} />
+      <Route path="/madhuri" element={<Madhuri />} />
       <Route path="/seller" element={<SellerUpdate />} />
     </Routes>
   );

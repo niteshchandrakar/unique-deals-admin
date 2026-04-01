@@ -33,8 +33,8 @@ function App() {
         <Link to="/pooja" style={buttonStyle}>
           Pooja
         </Link>
-        <Link to="/seller" style={buttonStyle}>
-          Seller
+        <Link to="/madhuri" style={buttonStyle}>
+          Madhuri
         </Link>
       </div>
       <Allroutes />
