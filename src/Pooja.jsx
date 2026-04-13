@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import Formcheck from "./Components/Formcheck";
 import IdNotFound from "./Components/IdNotFound";
 import WrongForm from "./Components/WrongForm";
-import Formchecktemp from "./Components/Formchecktemp";
 
 function Pooja() {
   const [active, setActive] = useState("formCheck"); // default selected
@@ -68,7 +67,7 @@ function Pooja() {
 
       {/* Conditional Component Rendering */}
       {active === "formCheck" && <Formcheck />}
-      {active === "formCheck2" && <Formchecktemp />}
+
       {active === "notFound" && <IdNotFound />}
       {active === "wrongForm" && <WrongForm />}
     </div>
