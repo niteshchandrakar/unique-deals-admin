@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { gapi } from "gapi-script";
 import dayjs from "dayjs";
-
+import medList from "../med";
 const CLIENT_ID =
   "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
 
@@ -156,11 +156,13 @@ function Akku() {
 
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
-        range: `Sheet1!E${actualRowNumber}:I${actualRowNumber}`,
+        range: `Sheet1!C${actualRowNumber}:I${actualRowNumber}`,
         valueInputOption: "USER_ENTERED",
         resource: {
           values: [
             [
+              order.mediator, // ⭐ NEW (Column C)
+              order.whatsapp_number,
               order.order_amount,
               order.less_amount,
               "",
@@ -286,7 +288,22 @@ function Akku() {
               </div>
 
               <div style={rowBetween}>
-                <span style={{ width: "150px" }}>👤 {order.mediator}</span>
+                <select
+                  value={order.mediator}
+                  style={{ padding: "6px", borderRadius: "8px" }}
+                  onChange={(e) => {
+                    const updated = [...orders];
+                    updated[i].mediator = e.target.value;
+                    setOrders(updated);
+                    setCopiedOrderId(order.order_id);
+                  }}
+                >
+                  {medList.map((med) => (
+                    <option key={med} value={med}>
+                      {med}
+                    </option>
+                  ))}
+                </select>
                 {mediatorSheets[order.mediator] && (
                   <button
                     onClick={() => {
