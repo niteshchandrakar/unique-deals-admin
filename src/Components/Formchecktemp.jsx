@@ -164,8 +164,8 @@ function Formchecktemp() {
 
           const diffInDays = today.diff(refundDate, "day");
 
-          // after cutoff date AND at least 4 days old
-          return refundDate.isAfter(cutoffDate) && diffInDays >= 4;
+          // after cutoff date AND at least 9 days old
+          return refundDate.isAfter(cutoffDate) && diffInDays >= 9;
         })
 
         .map((row, idx) => ({
