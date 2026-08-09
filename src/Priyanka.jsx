@@ -74,7 +74,7 @@ function Priyanka() {
           timeline: row[11],
           BrandName: row[12],
         }));
-      console.log(filteredOrders);
+
       setOrders(filteredOrders);
     } catch (error) {
       alert("Error fetching data: " + error.message);

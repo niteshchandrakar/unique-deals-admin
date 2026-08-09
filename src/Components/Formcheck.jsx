@@ -44,9 +44,6 @@ function Formcheck() {
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [clickedOrderId, setClickedOrderId] = useState(null);
-  const [showReasonModal, setShowReasonModal] = useState(false);
-  const [reasonText, setReasonText] = useState("");
-  const [activeIndex, setActiveIndex] = useState(null);
 
   const showModal = (message) => {
     setModalMessage(message);
@@ -91,7 +88,19 @@ function Formcheck() {
         .filter((row) => row[2]?.toLowerCase() === mediator.toLowerCase())
         .filter((row) => row[7] === "" || row[7] === "pending")
         .filter((row) => row[9] === "")
-        .map((row) => ({
+        .filter((row) => {
+          if (!row[1]) return false;
+
+          const refundDate = new Date(row[1]);
+          const currentDate = new Date();
+
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+
+          // 30 days old or older
+          return refundDate <= thirtyDaysAgo;
+        })
+        .map((row, idx) => ({
           order_id: row[0],
           refund_form_date: row[1],
           Mediator: row[2],
@@ -102,9 +111,10 @@ function Formcheck() {
           payment: row[7],
           Notes: row[8],
           form: row[9],
+          buyerRemark: row[10],
+          timeline: row[11],
           BrandName: row[12],
         }));
-
       setOrders(filteredOrders);
     } catch (error) {
       alert("Error fetching data: " + error.message);
@@ -121,7 +131,9 @@ function Formcheck() {
 
   const handleUpdateOrder = async (orderData) => {
     if (!orderData) return;
-    console.log(orderData);
+    if (orderData.form === "wrong" && orderData.buyerRemark === "") {
+      return alert("wrong kyu hai wo likho");
+    }
     if (!orderData.order_amount) {
       showModal("❌ Order amount fill karo");
       return;
@@ -146,7 +158,7 @@ function Formcheck() {
       const updateResponse =
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
-          range: `Sheet1!A${actualRowNumber}:J${actualRowNumber}`, // Use backticks for template string
+          range: `Sheet1!A${actualRowNumber}:M${actualRowNumber}`, // Use backticks for template string
           valueInputOption: "USER_ENTERED",
           resource: {
             values: [
@@ -159,8 +171,11 @@ function Formcheck() {
                 orderData.Less_amount || "",
                 "", // paid_amount left blank as per your code
                 orderData.payment || "",
-                orderData.Notes || "",
+                orderData.notes || "",
                 orderData.form || "",
+                orderData.buyerRemark || "",
+                orderData.timeline || "",
+                orderData.BrandName || "",
               ],
             ],
           },
@@ -264,7 +279,7 @@ function Formcheck() {
             <tr>
               <th>Order ID</th>
               <th>Form</th>
-              <th>Amount</th>
+              <th>Buyer Message</th>
 
               <th>Update</th>
             </tr>
@@ -305,12 +320,6 @@ function Formcheck() {
                       onChange={(e) => {
                         const value = e.target.value;
 
-                        if (value === "wrong") {
-                          setActiveIndex(index);
-                          setReasonText(order.Notes || "");
-                          setShowReasonModal(true);
-                        }
-
                         handleChange(index, "form", value);
                       }}
                     >
@@ -324,9 +333,9 @@ function Formcheck() {
                     <input
                       style={{ maxWidth: "45px" }}
                       type="text"
-                      value={order.order_amount}
+                      value={order.buyerRemark}
                       onChange={(e) =>
-                        handleChange(index, "order_amount", e.target.value)
+                        handleChange(index, "buyerRemark", e.target.value)
                       }
                     />
                   </td>
@@ -340,61 +349,6 @@ function Formcheck() {
               ))}
           </tbody>
         </table>
-      )}
-      {showReasonModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              padding: "20px",
-              borderRadius: "8px",
-              width: "300px",
-            }}
-          >
-            <h3>❌ Reason for Wrong</h3>
-
-            <textarea
-              style={{ width: "100%", minHeight: "80px" }}
-              placeholder="Enter reason..."
-              value={reasonText}
-              onChange={(e) => setReasonText(e.target.value)}
-            />
-
-            <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
-              <button
-                onClick={() => {
-                  handleChange(activeIndex, "Notes", reasonText);
-                  setShowReasonModal(false);
-                  setReasonText("");
-                }}
-              >
-                Save
-              </button>
-
-              <button
-                onClick={() => {
-                  handleChange(activeIndex, "form", "");
-                  setShowReasonModal(false);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       {modalMessage && <div className="modal">{modalMessage}</div>}
