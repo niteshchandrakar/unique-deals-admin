@@ -36,7 +36,7 @@ function EditModal({ searchId, setShowEditModal, fetchOrders }) {
           "order_id",
           "refund_form_date",
           "Mediator",
-          "whatsapp_number",
+          "Your_Whatsapp_Number",
           "order_amount",
           "Less_amount",
           "paid_amount",

@@ -96,16 +96,15 @@ function Akku() {
       const keys = [
         "order_id",
         "refund_form_date",
-        "mediator",
-        "whatsapp_number",
+        "Mediator",
+        "Your_Whatsapp_Number",
         "order_amount",
-        "less_amount",
+        "Less_amount",
         "paid_amount",
         "payment",
         "notes",
         "form",
-        "",
-        "",
+        "buyerRemark",
         "",
         "BrandName",
       ];
@@ -139,7 +138,7 @@ function Akku() {
   };
 
   // UPDATE ORDER
-  const handleUpdateOrder = async (order) => {
+  const handleUpdateOrder = async (orderData) => {
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
@@ -148,7 +147,7 @@ function Akku() {
 
       const rows = response.result.values || [];
 
-      const rowIndex = rows.findIndex((row) => row[0] === order.order_id);
+      const rowIndex = rows.findIndex((row) => row[0] === orderData.order_id);
 
       if (rowIndex === -1) return alert("Order id ni mila");
 
@@ -156,18 +155,24 @@ function Akku() {
 
       await gapi.client.sheets.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
-        range: `Sheet1!C${actualRowNumber}:I${actualRowNumber}`,
+        range: `Sheet1!A${actualRowNumber}:N${actualRowNumber}`,
         valueInputOption: "USER_ENTERED",
         resource: {
           values: [
             [
-              order.mediator, // ⭐ NEW (Column C)
-              order.whatsapp_number,
-              order.order_amount,
-              order.less_amount,
-              "",
-              order.payment,
-              order.notes,
+              orderData.order_id || "",
+              orderData.refund_form_date || "",
+              orderData.Mediator || "",
+              orderData.Your_Whatsapp_Number || "",
+              orderData.order_amount || "",
+              orderData.Less_amount || "",
+              "", // paid_amount left blank as per your code
+              orderData.payment || "",
+              orderData.notes || "",
+              orderData.form || "",
+              orderData.buyerRemark || "",
+              orderData.timeline || "",
+              orderData.BrandName || "",
             ],
           ],
         },
@@ -289,15 +294,16 @@ function Akku() {
 
               <div style={rowBetween}>
                 <select
-                  value={order.mediator}
+                  value={order.Mediator}
                   style={{ padding: "6px", borderRadius: "8px" }}
                   onChange={(e) => {
                     const updated = [...orders];
-                    updated[i].mediator = e.target.value;
+                    updated[i].Mediator = e.target.value;
                     setOrders(updated);
                     setCopiedOrderId(order.order_id);
                   }}
                 >
+                  <option value={""}>nahi-mila</option>
                   {medList.map((med) => (
                     <option key={med} value={med}>
                       {med}
@@ -359,10 +365,10 @@ function Akku() {
                 <input
                   placeholder="Less"
                   style={inputMobile}
-                  value={order.less_amount}
+                  value={order.Less_amount}
                   onChange={(e) => {
                     const updated = [...orders];
-                    updated[i].less_amount = e.target.value;
+                    updated[i].Less_amount = e.target.value;
                     setOrders(updated);
                   }}
                 />
