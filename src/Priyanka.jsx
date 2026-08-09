@@ -178,7 +178,7 @@ function Priyanka() {
             <tr>
               <th>Order ID</th>
               <th>Mediator</th>
-              {/* <th>Amount</th> */}
+              <th>Amount</th>
               <th>Update</th>
             </tr>
           </thead>
@@ -222,7 +222,7 @@ function Priyanka() {
                     ))}
                   </select>
                 </td>
-                {/* <td style={{ maxWidth: "60px" }}>
+                <td style={{ maxWidth: "60px" }}>
                   <input
                     style={{ maxWidth: "45px" }}
                     type="text"
@@ -231,7 +231,7 @@ function Priyanka() {
                       handleChange(index, "order_amount", e.target.value)
                     }
                   />
-                </td> */}
+                </td>
                 <td>
                   <button onClick={() => handleUpdateOrder(order)}>
                     Update
