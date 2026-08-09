@@ -62,8 +62,7 @@ function Pending() {
               row[2]?.toLowerCase() === mediator.toLowerCase()) &&
             row[7]?.toLowerCase() !== "a complete" &&
             row[7]?.toLowerCase() !== "cancel" &&
-            row[7]?.toLowerCase() !== "seller given" &&
-            row[7]?.toLowerCase() !== "hold",
+            row[7]?.toLowerCase() !== "seller given",
         )
 
         .sort((a, b) => {
@@ -81,7 +80,8 @@ function Pending() {
               : dayjs("1900-01-01");
           return parse(a[1]).unix() - parse(b[1]).unix();
         })
-        .map((row) => ({
+
+        .map((row, idx) => ({
           order_id: row[0],
           refund_form_date: dayjs(
             row[1],
@@ -92,10 +92,17 @@ function Pending() {
                 .year(CURRENT_YEAR)
                 .format("YYYY-MM-DD")
             : "1900-01-01",
+          Mediator: row[2],
+          Your_Whatsapp_Number: row[3],
+          order_amount: row[4],
+          Less_amount: row[5],
+          paid_amount: row[6],
+          payment: row[7],
           Notes: row[8],
-          payment: row[7] || "",
-          BrandName: row[13] || "",
-          form: row[9] || "",
+          form: row[9],
+          buyerRemark: row[10],
+          timeline: row[11],
+          BrandName: row[12],
         }));
       if (filteredOrders.length === 0) {
         alert("check med name");
@@ -258,6 +265,7 @@ function Pending() {
                           {order.form}
                         </span>
                       )}
+                      {order?.buyerRemark}
                     </div>
                   </td>
                   <td>{formatDate(order.refund_form_date)}</td>

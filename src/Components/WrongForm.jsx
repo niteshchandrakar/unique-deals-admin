@@ -80,6 +80,8 @@ function WrongForm() {
           payment: row[7],
           Notes: row[8],
           form: row[9],
+          buyerRemark: row[10],
+          timeline: row[11],
           BrandName: row[12],
         }));
 
@@ -111,7 +113,7 @@ function WrongForm() {
       if (!rows) return alert("No data found.");
 
       const rowIndex = rows.findIndex(
-        (row) => row[0]?.toString() === orderData.order_id?.toString()
+        (row) => row[0]?.toString() === orderData.order_id?.toString(),
       );
       if (rowIndex === -1) return alert("Order ID नहीं मिला ❌❌");
 
@@ -120,7 +122,7 @@ function WrongForm() {
       const updateResponse =
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
-          range: `Sheet1!A${actualRowNumber}:J${actualRowNumber}`, // Use backticks for template string
+          range: `Sheet1!A${actualRowNumber}:M${actualRowNumber}`, // Use backticks for template string
           valueInputOption: "USER_ENTERED",
           resource: {
             values: [
@@ -135,6 +137,9 @@ function WrongForm() {
                 orderData.payment || "",
                 orderData.notes || "",
                 orderData.form || "",
+                orderData.buyerRemark || "",
+                orderData.timeline || "",
+                orderData.BrandName || "",
               ],
             ],
           },
@@ -221,7 +226,7 @@ function WrongForm() {
                     {/* existing tiny info below ID (optional) */}
                     {order.refund_form_date &&
                       dayjs(order.refund_form_date, "M/D/YYYY").format(
-                        "DD-MMM"
+                        "DD-MMM",
                       )}{" "}
                     <span style={{ fontWeight: "bold" }}>{order.Mediator}</span>
                   </div>
@@ -235,7 +240,7 @@ function WrongForm() {
                     value={
                       order.refund_form_date
                         ? dayjs(order.refund_form_date, "M/D/YYYY").format(
-                            "YYYY-MM-DD"
+                            "YYYY-MM-DD",
                           )
                         : ""
                     }

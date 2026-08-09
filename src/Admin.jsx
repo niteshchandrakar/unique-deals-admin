@@ -59,7 +59,7 @@ function Admin() {
       for (const sheet of sheets) {
         const response = await gapi.client.sheets.spreadsheets.values.get({
           spreadsheetId: SHEET_ID,
-          range: `${sheet}!A2:I`,
+          range: `${sheet}!A2:M`,
         });
         const rows = response.result.values || [];
         const matchingOrders = rows.filter((row) => row[0] === searchId);
@@ -76,13 +76,17 @@ function Admin() {
         const keys = [
           "order_id",
           "refund_form_date",
-          "mediator",
-          "whatsapp_number",
+          "Mediator",
+          "Your_Whatsapp_Number",
           "order_amount",
-          "less_amount",
+          "Less_amount",
           "paid_amount",
           "payment",
           "notes",
+          "form",
+          "buyerRemark",
+          "timeline",
+          "BrandName",
         ];
         const orderObject = keys.reduce(
           (acc, key, index) => ({ ...acc, [key]: foundOrders[0][index] || "" }),
@@ -117,20 +121,24 @@ function Admin() {
       const updateResponse =
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
-          range: `Sheet1!A${actualRowNumber}:I${actualRowNumber}`,
+          range: `Sheet1!A${actualRowNumber}:M${actualRowNumber}`,
           valueInputOption: "USER_ENTERED",
           resource: {
             values: [
               [
-                orderData.order_id,
-                orderData.refund_form_date,
-                orderData.mediator,
-                orderData.whatsapp_number,
-                orderData.order_amount,
-                orderData.less_amount,
-                "",
-                orderData.payment,
-                orderData.notes,
+                orderData.order_id || "",
+                orderData.refund_form_date || "",
+                orderData.Mediator || "",
+                orderData.Your_Whatsapp_Number || "",
+                orderData.order_amount || "",
+                orderData.Less_amount || "",
+                "", // paid_amount left blank as per your code
+                orderData.payment || "",
+                orderData.notes || "",
+                orderData.form || "",
+                orderData.buyerRemark || "",
+                orderData.timeline || "",
+                orderData.BrandName || "",
               ],
             ],
           },
