@@ -82,7 +82,9 @@ function Formcheck() {
         range: "Sheet1!A2:M",
       });
 
-      const rows = response.result.values || [];
+      const rows = (response.result.values || []).map((row) => {
+        return [...row, ...Array(Math.max(0, 15 - row.length)).fill("")];
+      });
 
       const filteredOrders = rows
         .filter((row) => row[2]?.toLowerCase() === mediator.toLowerCase())
@@ -91,13 +93,12 @@ function Formcheck() {
         .filter((row) => {
           if (!row[1]) return false;
 
-          const refundDate = new Date(row[1]);
-          const currentDate = new Date();
+          const [month, day, year] = row[1].split("/").map(Number);
+          const refundDate = new Date(year, month - 1, day);
 
           const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-          // 30 days old or older
           return refundDate <= thirtyDaysAgo;
         })
         .map((row, idx) => ({
@@ -116,6 +117,7 @@ function Formcheck() {
           BrandName: row[12],
         }));
       setOrders(filteredOrders);
+      console.log(filteredOrders);
     } catch (error) {
       alert("Error fetching data: " + error.message);
     }
@@ -134,10 +136,7 @@ function Formcheck() {
     if (orderData.form === "wrong" && orderData.buyerRemark === "") {
       return alert("wrong kyu hai wo likho");
     }
-    if (!orderData.order_amount) {
-      showModal("❌ Order amount fill karo");
-      return;
-    }
+
     setLoading(true); // You should define setIsLoading and alert in your component
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
