@@ -50,7 +50,7 @@ function Priyanka() {
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: "Sheet1!A2:M",
+        range: "Sheet1!A2:O",
       });
 
       const rows = response.result.values || [];
@@ -69,9 +69,12 @@ function Priyanka() {
           paid_amount: row[6],
           payment: row[7],
           Notes: row[8],
+          form: row[9],
+          buyerRemark: row[10],
+          timeline: row[11],
           BrandName: row[12],
         }));
-
+      console.log(filteredOrders);
       setOrders(filteredOrders);
     } catch (error) {
       alert("Error fetching data: " + error.message);
@@ -91,6 +94,9 @@ function Priyanka() {
   };
 
   const handleUpdateOrder = async (orderData) => {
+    if (orderData.Mediator !== "nahi-mila" && orderData.order_amount === "") {
+      return alert("enter order amount");
+    }
     if (!orderData) return;
 
     setLoading(true); // You should define setIsLoading and alert in your component
@@ -113,7 +119,7 @@ function Priyanka() {
       const updateResponse =
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
-          range: `Sheet1!A${actualRowNumber}:I${actualRowNumber}`, // Use backticks for template string
+          range: `Sheet1!A${actualRowNumber}:M${actualRowNumber}`, // Use backticks for template string
           valueInputOption: "USER_ENTERED",
           resource: {
             values: [
@@ -127,6 +133,10 @@ function Priyanka() {
                 "", // paid_amount left blank as per your code
                 orderData.payment || "",
                 orderData.notes || "",
+                orderData.form || "",
+                orderData.buyerRemark || "",
+                orderData.timeline || "",
+                orderData.BrandName || "",
               ],
             ],
           },
@@ -179,6 +189,7 @@ function Priyanka() {
               <th>Order ID</th>
               <th>Mediator</th>
               <th>Amount</th>
+              <th>90 day</th>
               <th>Update</th>
             </tr>
           </thead>
@@ -222,15 +233,30 @@ function Priyanka() {
                     ))}
                   </select>
                 </td>
-                <td style={{ maxWidth: "60px" }}>
+                <td style={{ maxWidth: "40px" }}>
                   <input
-                    style={{ maxWidth: "45px" }}
+                    style={{ maxWidth: "35px" }}
                     type="text"
                     value={order.order_amount}
                     onChange={(e) =>
                       handleChange(index, "order_amount", e.target.value)
                     }
                   />
+                </td>
+                <td>
+                  <select
+                    value={order.timeline}
+                    onChange={(e) =>
+                      handleChange(index, "timeline", e.target.value)
+                    }
+                  >
+                    <option key="" value={"no"}>
+                      No
+                    </option>
+                    <option key={"yes"} value={"yes"}>
+                      Yes
+                    </option>
+                  </select>
                 </td>
                 <td>
                   <button onClick={() => handleUpdateOrder(order)}>
