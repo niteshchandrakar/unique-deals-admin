@@ -44,7 +44,7 @@ function Formcheck() {
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [clickedOrderId, setClickedOrderId] = useState(null);
-
+  const [allOrders, setAllOrders] = useState([]);
   const showModal = (message) => {
     setModalMessage(message);
     setTimeout(() => setModalMessage(""), 3000);
@@ -86,22 +86,36 @@ function Formcheck() {
         return [...row, ...Array(Math.max(0, 15 - row.length)).fill("")];
       });
 
-      const filteredOrders = rows
+      // 30 days ago
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Sabhi mediator ke pending orders
+      const allPendingOrders = rows.filter((row) => {
+        if (!row[2]) return false;
+
+        if (!(row[7] === "" || row[7] === "pending")) {
+          return false;
+        }
+
+        if (row[9] !== "") return false;
+
+        if (!row[1]) return false;
+
+        const [month, day, year] = row[1].split("/").map(Number);
+
+        const refundDate = new Date(year, month - 1, day);
+
+        return refundDate <= thirtyDaysAgo;
+      });
+
+      // Count ke liye save
+      setAllOrders(allPendingOrders);
+
+      // Selected mediator ke orders
+      const filteredOrders = allPendingOrders
         .filter((row) => row[2]?.toLowerCase() === mediator.toLowerCase())
-        .filter((row) => row[7] === "" || row[7] === "pending")
-        .filter((row) => row[9] === "")
-        .filter((row) => {
-          if (!row[1]) return false;
-
-          const [month, day, year] = row[1].split("/").map(Number);
-          const refundDate = new Date(year, month - 1, day);
-
-          const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-          return refundDate <= thirtyDaysAgo;
-        })
-        .map((row, idx) => ({
+        .map((row) => ({
           order_id: row[0],
           refund_form_date: row[1],
           Mediator: row[2],
@@ -116,8 +130,8 @@ function Formcheck() {
           timeline: row[11],
           BrandName: row[12],
         }));
+
       setOrders(filteredOrders);
-      console.log(filteredOrders);
     } catch (error) {
       alert("Error fetching data: " + error.message);
     }
@@ -220,11 +234,17 @@ function Formcheck() {
           }}
         >
           <option value="">Select Mediator</option>
-          {med.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
+          {med.map((opt) => {
+            const count = allOrders.filter(
+              (row) => row[2]?.toLowerCase() === opt.toLowerCase(),
+            ).length;
+
+            return (
+              <option key={opt} value={opt}>
+                {opt} ({count})
+              </option>
+            );
+          })}
         </select>
 
         {mediatorSheets[mediator] && (

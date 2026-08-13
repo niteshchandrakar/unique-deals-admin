@@ -7,7 +7,7 @@ function App() {
   const buttonStyle = {
     width: "20%",
     margin: "10px",
-    padding: "6px 10px",
+    padding: "6px 5px",
     textAlign: "center",
     textDecoration: "none",
     backgroundColor: "#007BFF",
@@ -31,10 +31,10 @@ function App() {
           Priyanka
         </Link>
         <Link to="/pooja" style={buttonStyle}>
-          Pooja
+          Madhuri
         </Link>
         <Link to="/madhuri" style={buttonStyle}>
-          Madhuri
+          Completed
         </Link>
       </div>
       <Allroutes />
