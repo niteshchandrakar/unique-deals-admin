@@ -20,6 +20,7 @@ function Pending() {
   const [modalContent, setModalContent] = useState({ mediator: "", type: "" });
   const [showEditModal, setShowEditModal] = useState(false);
   const [EditId, setEditID] = useState(null);
+  const [summaryData, setSummaryData] = useState([]);
   useEffect(() => {
     gapi.load("client:auth2", () => {
       gapi.client
@@ -47,7 +48,6 @@ function Pending() {
   };
 
   const fetchOrders = async () => {
-    if (!mediator) return alert("Enter Mediator Name");
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
@@ -55,6 +55,53 @@ function Pending() {
       });
       const rows = response.result.values || [];
       const CURRENT_YEAR = new Date().getFullYear();
+      const today = dayjs();
+
+      const summary = {};
+
+      rows.forEach((row) => {
+        const mediatorName = row[2];
+
+        if (!mediatorName) return;
+
+        // Same exclusions as your existing code
+        if (row[7]?.toLowerCase() === "a complete") return;
+        if (row[7]?.toLowerCase() === "cancel") return;
+        if (row[7]?.toLowerCase() === "seller given") return;
+
+        const refundDate = dayjs(
+          row[1],
+          ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
+          true,
+        );
+
+        if (!refundDate.isValid()) return;
+
+        const daysOld = today.diff(refundDate, "day");
+
+        if (daysOld < 40) return;
+
+        if (!summary[mediatorName]) {
+          summary[mediatorName] = {
+            mediator: mediatorName,
+            days40: 0,
+            days50: 0,
+            days60: 0,
+          };
+        }
+
+        if (daysOld >= 40 && daysOld < 50) {
+          summary[mediatorName].days40++;
+        } else if (daysOld >= 50 && daysOld < 60) {
+          summary[mediatorName].days50++;
+        } else if (daysOld >= 60) {
+          summary[mediatorName].days60++;
+        }
+      });
+
+      setSummaryData(
+        Object.values(summary).sort((a, b) => b.days60 - a.days60),
+      );
       const filteredOrders = rows
         .filter(
           (row) =>
@@ -168,7 +215,11 @@ function Pending() {
       setShowModal(false);
     }, 2000);
   };
+  useEffect(() => {
+    if (!isAuthenticated) return;
 
+    fetchOrders();
+  }, [isAuthenticated]);
   return (
     <div style={{ padding: "10px" }}>
       <h1>Order Filter by Mediator</h1>
@@ -212,7 +263,43 @@ function Pending() {
 
             <button onClick={copyToClipboard}>Copy</button>
           </div>
+          {!mediator && summaryData.length > 0 && (
+            <table
+              border="1"
+              style={{
+                borderCollapse: "collapse",
+                width: "100%",
+                marginTop: "20px",
+                textAlign: "center",
+              }}
+            >
+              <thead>
+                <tr>
+                  <th>Mediator</th>
+                  <th>40 Days</th>
+                  <th>50 Days</th>
+                  <th>60+ Days</th>
+                </tr>
+              </thead>
 
+              <tbody>
+                {summaryData.map((item) => (
+                  <tr
+                    style={{
+                      backgroundColor: item.days60 > 25 ? "red" : "",
+                      fontWeight: item.days60 > 25 ? "bold" : "normal",
+                    }}
+                    key={item.mediator}
+                  >
+                    <td>{item.mediator}</td>
+                    <td>{item.days40}</td>
+                    <td>{item.days50}</td>
+                    <td>{item.days60}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
           <table border="1">
             <thead>
               <tr>
