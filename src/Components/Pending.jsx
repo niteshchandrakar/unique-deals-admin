@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { gapi } from "gapi-script";
 import dayjs from "dayjs";
 import EditModal from "./EditModal";
@@ -47,12 +47,13 @@ function Pending() {
     }
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
         range: "Sheet1!A2:N",
       });
+
       const rows = response.result.values || [];
       const CURRENT_YEAR = new Date().getFullYear();
       const today = dayjs();
@@ -64,7 +65,6 @@ function Pending() {
 
         if (!mediatorName) return;
 
-        // Same exclusions as your existing code
         if (row[7]?.toLowerCase() === "a complete") return;
         if (row[7]?.toLowerCase() === "cancel") return;
         if (row[7]?.toLowerCase() === "seller given") return;
@@ -102,6 +102,7 @@ function Pending() {
       setSummaryData(
         Object.values(summary).sort((a, b) => b.days60 - a.days60),
       );
+
       const filteredOrders = rows
         .filter(
           (row) =>
@@ -111,24 +112,22 @@ function Pending() {
             row[7]?.toLowerCase() !== "cancel" &&
             row[7]?.toLowerCase() !== "seller given",
         )
-
         .sort((a, b) => {
-          const parse = (dateStr) =>
-            dayjs(
+          const parse = (dateStr) => {
+            const parsed = dayjs(
               dateStr,
               ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
               true,
-            ).isValid()
-              ? dayjs(
-                  dateStr,
-                  ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
-                  true,
-                ).year(CURRENT_YEAR)
+            );
+
+            return parsed.isValid()
+              ? parsed.year(CURRENT_YEAR)
               : dayjs("1900-01-01");
+          };
+
           return parse(a[1]).unix() - parse(b[1]).unix();
         })
-
-        .map((row, idx) => ({
+        .map((row) => ({
           order_id: row[0],
           refund_form_date: dayjs(
             row[1],
@@ -139,6 +138,7 @@ function Pending() {
                 .year(CURRENT_YEAR)
                 .format("YYYY-MM-DD")
             : "1900-01-01",
+
           Mediator: row[2],
           Your_Whatsapp_Number: row[3],
           order_amount: row[4],
@@ -151,15 +151,17 @@ function Pending() {
           timeline: row[11],
           BrandName: row[12],
         }));
+
       if (filteredOrders.length === 0) {
         alert("check med name");
         setOrders([]);
       }
+
       setOrders(filteredOrders);
     } catch (error) {
       alert("Error fetching data: " + error.message);
     }
-  };
+  }, [mediator]);
   const formatDate = (dateStr) => dayjs(dateStr).format("D MMM");
 
   const copyToClipboard = () => {
@@ -219,7 +221,7 @@ function Pending() {
     if (!isAuthenticated) return;
 
     fetchOrders();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchOrders]);
   return (
     <div style={{ padding: "10px" }}>
       <h1>Order Filter by Mediator</h1>
