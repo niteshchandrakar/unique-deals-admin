@@ -54,8 +54,17 @@ function Priyanka() {
       });
 
       const rows = response.result.values || [];
+      const seenOrderIds = new Set();
 
       const filteredOrders = rows
+        .filter((row) => {
+          if (seenOrderIds.has(row[0])) {
+            return false;
+          }
+
+          seenOrderIds.add(row[0]);
+          return true;
+        })
         .filter((row) => row[2] === "")
         .filter((row) => row[7] === "" || row[7] === "pending")
         //  .filter((row) => row[2] === "" || row[4] === "")
