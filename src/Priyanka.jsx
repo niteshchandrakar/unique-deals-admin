@@ -66,7 +66,10 @@ function Priyanka() {
           return true;
         })
         .filter((row) => row[2] === "")
-        .filter((row) => row[7] === "" || row[7] === "pending")
+        .filter(
+          (row) =>
+            row[7] === "" || row[7] === "pending" || row[7] === "me given",
+        )
         //  .filter((row) => row[2] === "" || row[4] === "")
         .map((row, idx) => ({
           order_id: row[0],
