@@ -1,53 +1,34 @@
 import { useCallback, useEffect, useState } from "react";
-import { gapi } from "gapi-script";
 import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 import EditModal from "./EditModal";
 import med from "../med";
-const CLIENT_ID =
-  "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
-const API_KEY = "AIzaSyDScP5GlWBV1kA8k0cfLK6r7JvRHRqqOJU";
-const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
-const DISCOVERY_DOC =
-  "https://sheets.googleapis.com/$discovery/rest?version=v4";
-const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+import { useGoogleAuth, SHEET_ID, GoogleAuthButtons } from "../auth/GoogleAuth";
+
+dayjs.extend(customParseFormat);
+
+const DATE_FORMATS = ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"];
 
 function Pending() {
   const [mediator, setMediator] = useState("");
   const [orders, setOrders] = useState([]);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [copyMode, setCopyMode] = useState("full");
   const [showModal, setShowModal] = useState(false);
-  const [modalContent, setModalContent] = useState({ mediator: "", type: "" });
+  const [modalContent, setModalContent] = useState({
+    mediator: "",
+    type: "",
+  });
   const [showEditModal, setShowEditModal] = useState(false);
   const [EditId, setEditID] = useState(null);
   const [summaryData, setSummaryData] = useState([]);
-  useEffect(() => {
-    gapi.load("client:auth2", () => {
-      gapi.client
-        .init({
-          apiKey: API_KEY,
-          clientId: CLIENT_ID,
-          discoveryDocs: [DISCOVERY_DOC],
-          scope: SCOPE,
-        })
-        .then(() => {
-          if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
-            setIsAuthenticated(true);
-          }
-        });
-    });
-  }, []);
 
-  const handleLogin = async () => {
-    try {
-      await gapi.auth2.getAuthInstance().signIn();
-      setIsAuthenticated(true);
-    } catch (error) {
-      alert("Login Error: " + error.message);
-    }
-  };
+  const { isApiReady, isAuthenticated, gapi } = useGoogleAuth();
 
   const fetchOrders = useCallback(async () => {
+    if (!isApiReady || !isAuthenticated || !gapi?.client?.sheets) {
+      return;
+    }
+
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
@@ -65,15 +46,21 @@ function Pending() {
 
         if (!mediatorName) return;
 
-        if (row[7]?.toLowerCase() === "a complete") return;
-        if (row[7]?.toLowerCase() === "cancel") return;
-        if (row[7]?.toLowerCase() === "seller given") return;
+        const paymentStatus = (row[7] || "").toLowerCase();
 
-        const refundDate = dayjs(
-          row[1],
-          ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
-          true,
-        );
+        if (
+          paymentStatus === "a complete" ||
+          paymentStatus === "cancel" ||
+          paymentStatus === "seller given"
+        ) {
+          return;
+        }
+
+        let refundDate = dayjs(row[1], DATE_FORMATS, true);
+
+        if (refundDate.isValid() && !/\d{4}/.test(row[1] || "")) {
+          refundDate = refundDate.year(CURRENT_YEAR);
+        }
 
         if (!refundDate.isValid()) return;
 
@@ -104,94 +91,88 @@ function Pending() {
       );
 
       const filteredOrders = rows
-        .filter(
-          (row) =>
-            (mediator.toLowerCase() === "all mediator" ||
-              row[2]?.toLowerCase() === mediator.toLowerCase()) &&
-            row[7]?.toLowerCase() !== "a complete" &&
-            row[7]?.toLowerCase() !== "cancel" &&
-            row[7]?.toLowerCase() !== "seller given",
-        )
+        .filter((row) => {
+          const paymentStatus = (row[7] || "").toLowerCase();
+
+          const mediatorMatches =
+            !mediator ||
+            mediator.toLowerCase() === "all mediator" ||
+            row[2]?.toLowerCase() === mediator.toLowerCase();
+
+          return (
+            mediatorMatches &&
+            paymentStatus !== "a complete" &&
+            paymentStatus !== "cancel" &&
+            paymentStatus !== "seller given"
+          );
+        })
         .sort((a, b) => {
           const parse = (dateStr) => {
-            const parsed = dayjs(
-              dateStr,
-              ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
-              true,
-            );
+            let parsed = dayjs(dateStr, DATE_FORMATS, true);
 
-            return parsed.isValid()
-              ? parsed.year(CURRENT_YEAR)
-              : dayjs("1900-01-01");
+            if (parsed.isValid() && !/\d{4}/.test(dateStr || "")) {
+              parsed = parsed.year(CURRENT_YEAR);
+            }
+
+            return parsed.isValid() ? parsed : dayjs("1900-01-01");
           };
 
           return parse(a[1]).unix() - parse(b[1]).unix();
         })
-        .map((row) => ({
-          order_id: row[0],
-          refund_form_date: dayjs(
-            row[1],
-            ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"],
-            true,
-          ).isValid()
-            ? dayjs(row[1], ["D/M/YYYY", "M/D/YYYY", "D MMM", "D MMMM"], true)
-                .year(CURRENT_YEAR)
-                .format("YYYY-MM-DD")
-            : "1900-01-01",
+        .map((row) => {
+          let parsedDate = dayjs(row[1], DATE_FORMATS, true);
 
-          Mediator: row[2],
-          Your_Whatsapp_Number: row[3],
-          order_amount: row[4],
-          Less_amount: row[5],
-          paid_amount: row[6],
-          payment: row[7],
-          Notes: row[8],
-          form: row[9],
-          buyerRemark: row[10],
-          timeline: row[11],
-          BrandName: row[12],
-        }));
+          if (parsedDate.isValid() && !/\d{4}/.test(row[1] || "")) {
+            parsedDate = parsedDate.year(CURRENT_YEAR);
+          }
+
+          return {
+            order_id: row[0],
+            refund_form_date: parsedDate.isValid()
+              ? parsedDate.format("YYYY-MM-DD")
+              : "1900-01-01",
+            Mediator: row[2],
+            Your_Whatsapp_Number: row[3],
+            order_amount: row[4],
+            Less_amount: row[5],
+            paid_amount: row[6],
+            payment: row[7],
+            Notes: row[8],
+            form: row[9],
+            buyerRemark: row[10],
+            timeline: row[11],
+            BrandName: row[12],
+          };
+        });
 
       if (filteredOrders.length === 0) {
-        alert("check med name");
+        alert(mediator ? "check med name" : "No pending orders found");
         setOrders([]);
+        return;
       }
 
       setOrders(filteredOrders);
     } catch (error) {
-      alert("Error fetching data: " + error.message);
+      alert("Error fetching data: " + (error?.message || String(error)));
     }
-  }, [mediator]);
+  }, [mediator, isApiReady, isAuthenticated, gapi]);
+
   const formatDate = (dateStr) => dayjs(dateStr).format("D MMM");
 
-  const copyToClipboard = () => {
+  const copyToClipboard = async () => {
     let textToCopy = "";
-
-    let filtered = orders;
-
-    // if (
-    //   copyMode === "olderThanMonth" ||
-    //   copyMode === "olderThanMonthWithBrand"
-    // ) {
-    //   filtered = orders.filter(
-    //     (o) => now.diff(dayjs(o.refund_form_date), "month") >= 1
-    //   );
-    // }
+    const filtered = orders;
 
     if (copyMode === "full") {
       textToCopy = filtered
         .map(
           (o) =>
-            `${o.order_id}\t\t${formatDate(o.refund_form_date)}\t\t${
-              o.BrandName || ""
-            }\n`,
+            `${o.order_id}\t\t${formatDate(
+              o.refund_form_date,
+            )}\t\t${o.BrandName || ""}\n`,
         )
         .join("\n");
-    } else if (copyMode === "idAndDate") {
-      textToCopy = filtered
-        .map((o) => `${o.order_id}\t\t${formatDate(o.refund_form_date)}\n`)
-        .join("\n");
-    } else if (copyMode === "olderThanMonth") {
+    } else if (copyMode === "idAndDate" || copyMode === "olderThanMonth") {
       textToCopy = filtered
         .map((o) => `${o.order_id}\t\t${formatDate(o.refund_form_date)}\n`)
         .join("\n");
@@ -199,9 +180,9 @@ function Pending() {
       textToCopy = filtered
         .map(
           (o) =>
-            `${o.order_id}\t\t${formatDate(o.refund_form_date)}\t\t${
-              o.BrandName || ""
-            }\n`,
+            `${o.order_id}\t\t${formatDate(
+              o.refund_form_date,
+            )}\t\t${o.BrandName || ""}\n`,
         )
         .join("\n");
     } else {
@@ -209,32 +190,51 @@ function Pending() {
       return;
     }
 
-    navigator.clipboard.writeText(textToCopy.trim());
-    setModalContent({ mediator: mediator, type: copyMode });
-    setShowModal(true);
+    try {
+      await navigator.clipboard.writeText(textToCopy.trim());
 
-    setTimeout(() => {
-      setShowModal(false);
-    }, 2000);
+      setModalContent({
+        mediator: mediator || "All Mediators",
+        type: copyMode,
+      });
+
+      setShowModal(true);
+
+      setTimeout(() => {
+        setShowModal(false);
+      }, 2000);
+    } catch (error) {
+      alert("Copy failed: " + (error?.message || String(error)));
+    }
   };
+
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isApiReady || !isAuthenticated) return;
 
     fetchOrders();
-  }, [isAuthenticated, fetchOrders]);
+  }, [isApiReady, isAuthenticated, fetchOrders]);
+
   return (
     <div style={{ padding: "10px" }}>
       <h1>Order Filter by Mediator</h1>
+
       {!isAuthenticated ? (
-        <button onClick={handleLogin}>Login with Google</button>
+        <GoogleAuthButtons />
       ) : (
         <>
-          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginBottom: "10px",
+            }}
+          >
             <select
               value={mediator}
               onChange={(e) => setMediator(e.target.value)}
             >
               <option value="">Select Mediator</option>
+
               {med.map((opt) => (
                 <option key={opt} value={opt}>
                   {opt}
@@ -247,14 +247,23 @@ function Pending() {
             </button>
           </div>
 
-          <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              marginBottom: "10px",
+            }}
+          >
             <select
               value={copyMode}
               onChange={(e) => setCopyMode(e.target.value)}
             >
               {/* <option value="">Select Copy Mode</option> */}
               <option value="full">Order ID + Refund Date + Brand</option>
-              {/* <option value="idAndDate">Order ID + Refund Date</option>
+
+              {/* <option value="idAndDate">
+                Order ID + Refund Date
+              </option>
               <option value="olderThanMonth">
                 Order ID + Refund Date (Older than 1 month)
               </option>
@@ -265,6 +274,7 @@ function Pending() {
 
             <button onClick={copyToClipboard}>Copy</button>
           </div>
+
           {!mediator && summaryData.length > 0 && (
             <table
               border="1"
@@ -302,6 +312,7 @@ function Pending() {
               </tbody>
             </table>
           )}
+
           <table border="1">
             <thead>
               <tr>
@@ -311,6 +322,7 @@ function Pending() {
                 <th>Brand</th>
               </tr>
             </thead>
+
             <tbody>
               {orders.map((order, index) => (
                 <tr key={index}>
@@ -322,11 +334,15 @@ function Pending() {
                           setEditID(order.order_id);
                           setShowEditModal(true);
                         }}
-                        style={{ marginLeft: "6px", cursor: "pointer" }}
+                        style={{
+                          marginLeft: "6px",
+                          cursor: "pointer",
+                        }}
                       >
                         ✏️
                       </span>
                     </div>
+
                     <div>
                       {order?.payment && (
                         <span
@@ -341,6 +357,7 @@ function Pending() {
                           {order.payment}
                         </span>
                       )}
+
                       {order?.form && (
                         <span
                           style={{
@@ -354,9 +371,11 @@ function Pending() {
                           {order.form}
                         </span>
                       )}
+
                       {order?.buyerRemark}
                     </div>
                   </td>
+
                   <td>{formatDate(order.refund_form_date)}</td>
                   <td>{order.Notes}</td>
                   <td>{order.BrandName}</td>
@@ -366,6 +385,7 @@ function Pending() {
           </table>
         </>
       )}
+
       {showModal && (
         <div
           style={{
@@ -386,6 +406,7 @@ function Pending() {
           <strong>{modalContent.type}</strong>
         </div>
       )}
+
       {showEditModal && (
         <EditModal
           setShowEditModal={setShowEditModal}

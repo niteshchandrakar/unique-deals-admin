@@ -1,16 +1,13 @@
-import { useEffect, useState } from "react";
-import { gapi } from "gapi-script";
+import { useEffect, useState, useCallback } from "react";
 import dayjs from "dayjs";
-const CLIENT_ID =
-  "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
-const API_KEY = "AIzaSyDScP5GlWBV1kA8k0cfLK6r7JvRHRqqOJU";
-const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
-const DISCOVERY_DOC =
-  "https://sheets.googleapis.com/$discovery/rest?version=v4";
-const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import { useGoogleAuth, SHEET_ID, GoogleAuthButtons } from "../auth/GoogleAuth";
+
+dayjs.extend(customParseFormat);
 
 function WrongForm() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isApiReady, isAuthenticated, gapi } = useGoogleAuth();
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -20,33 +17,18 @@ function WrongForm() {
     setModalMessage(message);
     setTimeout(() => setModalMessage(""), 3000);
   };
-  useEffect(() => {
-    gapi.load("client:auth2", () => {
-      gapi.client
-        .init({
-          apiKey: API_KEY,
-          clientId: CLIENT_ID,
-          discoveryDocs: [DISCOVERY_DOC],
-          scope: SCOPE,
-        })
-        .then(() => {
-          if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
-            setIsAuthenticated(true);
-          }
-        });
-    });
-  }, []);
 
-  const handleLogin = async () => {
-    try {
-      await gapi.auth2.getAuthInstance().signIn();
-      setIsAuthenticated(true);
-    } catch (error) {
-      alert("Login Error: " + error.message);
-    }
+  const parseSheetDate = (date) => {
+    if (!date) return dayjs("");
+
+    return dayjs(date, ["M/D/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"], true);
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
+    if (!isApiReady || !isAuthenticated || !gapi?.client?.sheets) {
+      return;
+    }
+
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
@@ -54,47 +36,52 @@ function WrongForm() {
       });
 
       const rows = response.result.values || [];
-      // const today = dayjs();
-      const filteredOrders = rows
 
+      const cutoffDate = dayjs("09/01/2025", "MM/DD/YYYY", true);
+      const today = dayjs();
+
+      const filteredOrders = rows
         .filter((row) => row[9] === "wrong")
         .filter((row) => {
-          const refundDate = dayjs(row[1], "M/D/YYYY"); // refund date (format: mm/dd/yyyy)
-          const cutoffDate = dayjs("09/01/2025", "MM/DD/YYYY"); // fixed date: 1 September 2025
-          const today = dayjs(); // current date
+          const refundDate = parseSheetDate(row[1]);
 
-          // difference between today and refund date in days
+          if (!refundDate.isValid()) return false;
+
           const diffInDays = today.diff(refundDate, "day");
 
-          // condition: date should be after cutoffDate and at least 4 days old
           return refundDate.isAfter(cutoffDate) && diffInDays >= 4;
         })
-        .map((row, idx) => ({
-          order_id: row[0],
-          refund_form_date: row[1],
-          Mediator: row[2],
-          Your_Whatsapp_Number: row[3],
-          order_amount: row[4],
-          Less_amount: row[5],
-          paid_amount: row[6],
-          payment: row[7],
-          Notes: row[8],
-          form: row[9],
-          buyerRemark: row[10],
-          timeline: row[11],
-          BrandName: row[12],
+        .map((row) => ({
+          order_id: row[0] || "",
+          refund_form_date: row[1] || "",
+          Mediator: row[2] || "",
+          Your_Whatsapp_Number: row[3] || "",
+          order_amount: row[4] || "",
+          Less_amount: row[5] || "",
+          paid_amount: row[6] || "",
+          payment: row[7] || "",
+          Notes: row[8] || "",
+          form: row[9] || "",
+          buyerRemark: row[10] || "",
+          timeline: row[11] || "",
+          BrandName: row[12] || "",
         }));
 
       setOrders(filteredOrders);
     } catch (error) {
       alert("Error fetching data: " + error.message);
     }
-  };
+  }, [isApiReady, isAuthenticated, gapi]);
 
   const handleChange = (index, field, value) => {
     setOrders((prev) => {
       const updated = [...prev];
-      updated[index][field] = value;
+
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+
       return updated;
     });
   };
@@ -102,27 +89,42 @@ function WrongForm() {
   const handleUpdateOrder = async (orderData) => {
     if (!orderData) return;
 
-    setLoading(true); // You should define setIsLoading and alert in your component
+    if (!isApiReady || !isAuthenticated || !gapi?.client?.sheets) {
+      showModal("Google API ready nahi hai. Dobara try karein.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: "Sheet1!A2:A", // Only fetching Order IDs
+        range: "Sheet1!A2:M",
       });
 
-      const rows = response.result.values;
-      if (!rows) return alert("No data found.");
+      const rows = response.result.values || [];
+
+      if (!rows.length) {
+        showModal("No data found.");
+        return;
+      }
 
       const rowIndex = rows.findIndex(
         (row) => row[0]?.toString() === orderData.order_id?.toString(),
       );
-      if (rowIndex === -1) return alert("Order ID नहीं मिला ❌❌");
 
-      const actualRowNumber = rowIndex + 2; // Adding 2 because rows start at A2
+      if (rowIndex === -1) {
+        showModal("Order ID नहीं मिला ❌❌");
+        return;
+      }
+
+      const actualRowNumber = rowIndex + 2;
+      const existingRow = rows[rowIndex];
 
       const updateResponse =
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
-          range: `Sheet1!A${actualRowNumber}:M${actualRowNumber}`, // Use backticks for template string
+          range: `Sheet1!A${actualRowNumber}:M${actualRowNumber}`,
           valueInputOption: "USER_ENTERED",
           resource: {
             values: [
@@ -133,9 +135,9 @@ function WrongForm() {
                 orderData.Your_Whatsapp_Number || "",
                 orderData.order_amount || "",
                 orderData.Less_amount || "",
-                "", // paid_amount left blank as per your code
+                existingRow[6] || "",
                 orderData.payment || "",
-                orderData.notes || "",
+                orderData.Notes || "",
                 orderData.form || "",
                 orderData.buyerRemark || "",
                 orderData.timeline || "",
@@ -147,6 +149,7 @@ function WrongForm() {
 
       if (updateResponse.status === 200) {
         showModal("✅ Data update हो गया!");
+        await fetchOrders();
       } else {
         showModal("⚠️ कुछ problem है, Nitesh को message कर लो");
       }
@@ -156,9 +159,13 @@ function WrongForm() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (isApiReady && isAuthenticated) {
+      fetchOrders();
+    }
+  }, [isApiReady, isAuthenticated, fetchOrders]);
+
   return (
     <div style={{ padding: "2px", position: "relative" }}>
       {loading && (
@@ -184,13 +191,13 @@ function WrongForm() {
       )}
 
       {!isAuthenticated ? (
-        <button onClick={handleLogin}>Login with Google</button>
+        <GoogleAuthButtons />
       ) : (
         <table border="1" style={{ borderCollapse: "collapse", width: "100%" }}>
           <thead>
             <tr>
               <th>Order ID</th>
-              <th>Refund Date</th> {/* 👈 NEW */}
+              <th>Refund Date</th>
               <th>Form</th>
               <th>Amount</th>
               <th>Update</th>
@@ -200,7 +207,6 @@ function WrongForm() {
           <tbody>
             {orders.map((order, index) => (
               <tr key={index}>
-                {/* Order ID cell as-is */}
                 <td
                   style={{
                     maxWidth: "50px",
@@ -215,46 +221,50 @@ function WrongForm() {
                         : "transparent",
                     transition: "all 0.3s ease",
                   }}
-                  onClick={() => {
-                    navigator.clipboard.writeText(order.order_id);
-                    showModal(order.order_id);
-                    setClickedOrderId(order.order_id);
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(order.order_id);
+                      showModal(order.order_id);
+                      setClickedOrderId(order.order_id);
+                    } catch (error) {
+                      showModal("Order ID copy nahi ho paya.");
+                    }
                   }}
                 >
                   {order.order_id}
+
                   <div>
-                    {/* existing tiny info below ID (optional) */}
                     {order.refund_form_date &&
-                      dayjs(order.refund_form_date, "M/D/YYYY").format(
+                      parseSheetDate(order.refund_form_date).isValid() &&
+                      parseSheetDate(order.refund_form_date).format(
                         "DD-MMM",
                       )}{" "}
                     <span style={{ fontWeight: "bold" }}>{order.Mediator}</span>
                   </div>
                 </td>
 
-                {/* 👇 NEW: Refund Date editable */}
                 <td>
                   <input
                     style={{ width: "70px" }}
                     type="date"
                     value={
-                      order.refund_form_date
-                        ? dayjs(order.refund_form_date, "M/D/YYYY").format(
+                      parseSheetDate(order.refund_form_date).isValid()
+                        ? parseSheetDate(order.refund_form_date).format(
                             "YYYY-MM-DD",
                           )
                         : ""
                     }
                     onChange={(e) => {
-                      const iso = e.target.value; // YYYY-MM-DD
+                      const iso = e.target.value;
                       const sheetFormat = iso
-                        ? dayjs(iso, "YYYY-MM-DD").format("M/D/YYYY")
+                        ? dayjs(iso).format("M/D/YYYY")
                         : "";
+
                       handleChange(index, "refund_form_date", sheetFormat);
                     }}
                   />
                 </td>
 
-                {/* Form select as-is */}
                 <td>
                   <select
                     value={order.form}
@@ -269,7 +279,6 @@ function WrongForm() {
                   </select>
                 </td>
 
-                {/* Amount input as-is */}
                 <td style={{ maxWidth: "60px" }}>
                   <input
                     style={{ maxWidth: "45px" }}
@@ -281,7 +290,6 @@ function WrongForm() {
                   />
                 </td>
 
-                {/* Update button as-is */}
                 <td>
                   <button onClick={() => handleUpdateOrder(order)}>
                     Update
@@ -292,6 +300,7 @@ function WrongForm() {
           </tbody>
         </table>
       )}
+
       {modalMessage && <div className="modal">{modalMessage}</div>}
     </div>
   );

@@ -1,16 +1,10 @@
-import { useEffect, useState } from "react";
-import { gapi } from "gapi-script";
+import { useEffect, useState, useCallback } from "react";
 import med from "./med";
-const CLIENT_ID =
-  "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
-const API_KEY = "AIzaSyDScP5GlWBV1kA8k0cfLK6r7JvRHRqqOJU";
-const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
-const DISCOVERY_DOC =
-  "https://sheets.googleapis.com/$discovery/rest?version=v4";
-const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+import { useGoogleAuth, SHEET_ID, GoogleAuthButtons } from "./auth/GoogleAuth";
 
 function Priyanka() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isApiReady, isAuthenticated, gapi } = useGoogleAuth();
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -20,33 +14,12 @@ function Priyanka() {
     setModalMessage(message);
     setTimeout(() => setModalMessage(""), 3000);
   };
-  useEffect(() => {
-    gapi.load("client:auth2", () => {
-      gapi.client
-        .init({
-          apiKey: API_KEY,
-          clientId: CLIENT_ID,
-          discoveryDocs: [DISCOVERY_DOC],
-          scope: SCOPE,
-        })
-        .then(() => {
-          if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
-            setIsAuthenticated(true);
-          }
-        });
-    });
-  }, []);
 
-  const handleLogin = async () => {
-    try {
-      await gapi.auth2.getAuthInstance().signIn();
-      setIsAuthenticated(true);
-    } catch (error) {
-      alert("Login Error: " + error.message);
+  const fetchOrders = useCallback(async () => {
+    if (!isApiReady || !isAuthenticated || !gapi?.client?.sheets) {
+      return;
     }
-  };
 
-  const fetchOrders = async () => {
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
@@ -70,8 +43,7 @@ function Priyanka() {
           (row) =>
             row[7] === "" || row[7] === "pending" || row[7] === "me given",
         )
-        //  .filter((row) => row[2] === "" || row[4] === "")
-        .map((row, idx) => ({
+        .map((row) => ({
           order_id: row[0],
           refund_form_date: row[1],
           Mediator: row[2],
@@ -91,47 +63,66 @@ function Priyanka() {
     } catch (error) {
       alert("Error fetching data: " + error.message);
     }
-  };
+  }, [isApiReady, isAuthenticated, gapi]);
 
   useEffect(() => {
-    if (isAuthenticated) fetchOrders();
-  }, [isAuthenticated]);
+    if (isApiReady && isAuthenticated) {
+      fetchOrders();
+    }
+  }, [isApiReady, isAuthenticated, fetchOrders]);
 
   const handleChange = (index, field, value) => {
     setOrders((prev) => {
       const updated = [...prev];
-      updated[index][field] = value;
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
       return updated;
     });
   };
 
   const handleUpdateOrder = async (orderData) => {
+    if (!orderData) return;
+
     if (orderData.Mediator !== "nahi-mila" && orderData.order_amount === "") {
       return alert("enter order amount");
     }
-    if (!orderData) return;
 
-    setLoading(true); // You should define setIsLoading and alert in your component
+    if (!isApiReady || !isAuthenticated || !gapi?.client?.sheets) {
+      return showModal("Google API ready nahi hai. Dobara try karein.");
+    }
+
+    setLoading(true);
+
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: "Sheet1!A2:A", // Only fetching Order IDs
+        range: "Sheet1!A2:A",
       });
 
-      const rows = response.result.values;
-      if (!rows) return alert("No data found.");
+      const rows = response.result.values || [];
+
+      if (!rows.length) {
+        showModal("No data found.");
+        return;
+      }
 
       const rowIndex = rows.findIndex(
         (row) => row[0]?.toString() === orderData.order_id?.toString(),
       );
-      if (rowIndex === -1) return alert("Order ID नहीं मिला ❌❌");
 
-      const actualRowNumber = rowIndex + 2; // Adding 2 because rows start at A2
+      if (rowIndex === -1) {
+        showModal("Order ID नहीं मिला ❌❌");
+        return;
+      }
+
+      const actualRowNumber = rowIndex + 2;
 
       const updateResponse =
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
-          range: `Sheet1!A${actualRowNumber}:M${actualRowNumber}`, // Use backticks for template string
+          range: `Sheet1!A${actualRowNumber}:M${actualRowNumber}`,
           valueInputOption: "USER_ENTERED",
           resource: {
             values: [
@@ -142,9 +133,9 @@ function Priyanka() {
                 orderData.Your_Whatsapp_Number || "",
                 orderData.order_amount || "",
                 orderData.Less_amount || "",
-                "", // paid_amount left blank as per your code
+                orderData.paid_amount || "",
                 orderData.payment || "",
-                orderData.notes || "",
+                orderData.Notes || orderData.notes || "",
                 orderData.form || "",
                 orderData.buyerRemark || "",
                 orderData.timeline || "",
@@ -156,6 +147,7 @@ function Priyanka() {
 
       if (updateResponse.status === 200) {
         showModal("✅ Data update हो गया!");
+        await fetchOrders();
       } else {
         showModal("⚠️ कुछ problem है, Nitesh को message कर लो");
       }
@@ -193,7 +185,7 @@ function Priyanka() {
       )}
 
       {!isAuthenticated ? (
-        <button onClick={handleLogin}>Login with Google</button>
+        <GoogleAuthButtons />
       ) : (
         <table border="1" style={{ borderCollapse: "collapse", width: "100%" }}>
           <thead>
@@ -205,6 +197,7 @@ function Priyanka() {
               <th>Update</th>
             </tr>
           </thead>
+
           <tbody>
             {orders.map((order, index) => (
               <tr key={index}>
@@ -230,6 +223,7 @@ function Priyanka() {
                 >
                   {order.order_id}
                 </td>
+
                 <td>
                   <select
                     value={order.Mediator}
@@ -238,6 +232,7 @@ function Priyanka() {
                     }
                   >
                     <option value="">Select Mediator</option>
+
                     {med.map((opt) => (
                       <option key={opt} value={opt}>
                         {opt}
@@ -245,31 +240,30 @@ function Priyanka() {
                     ))}
                   </select>
                 </td>
+
                 <td style={{ maxWidth: "40px" }}>
                   <input
                     style={{ maxWidth: "35px" }}
                     type="text"
-                    value={order.order_amount}
+                    value={order.order_amount ?? ""}
                     onChange={(e) =>
                       handleChange(index, "order_amount", e.target.value)
                     }
                   />
                 </td>
+
                 <td>
                   <select
-                    value={order.timeline}
+                    value={order.timeline || "no"}
                     onChange={(e) =>
                       handleChange(index, "timeline", e.target.value)
                     }
                   >
-                    <option key="" value={"no"}>
-                      No
-                    </option>
-                    <option key={"yes"} value={"yes"}>
-                      Yes
-                    </option>
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
                   </select>
                 </td>
+
                 <td>
                   <button onClick={() => handleUpdateOrder(order)}>
                     Update
@@ -280,6 +274,7 @@ function Priyanka() {
           </tbody>
         </table>
       )}
+
       {modalMessage && <div className="modal">{modalMessage}</div>}
     </div>
   );

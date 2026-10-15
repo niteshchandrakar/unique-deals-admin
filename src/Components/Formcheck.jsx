@@ -1,14 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { gapi } from "gapi-script";
 import dayjs from "dayjs";
 import med from "../med";
-const CLIENT_ID =
-  "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
-const API_KEY = "AIzaSyDScP5GlWBV1kA8k0cfLK6r7JvRHRqqOJU";
-const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
-const DISCOVERY_DOC =
-  "https://sheets.googleapis.com/$discovery/rest?version=v4";
-const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+import { useGoogleAuth, SHEET_ID, GoogleAuthButtons } from "../auth/GoogleAuth";
+
 const mediatorSheets = {
   kkb: "https://docs.google.com/spreadsheets/d/18sMm_snwml5VmSdA9q2yGV5Dbb1z0Ot7Fu0JcLI61TA",
   "Prince BGM":
@@ -23,7 +17,6 @@ const mediatorSheets = {
   manish:
     "https://docs.google.com/spreadsheets/d/1Z_WgxnlEq7f94wF2R-nGVWZzaSawA6BSfvvQ8QeOYSU",
   adf: "https://docs.google.com/spreadsheets/d/1vHktKwrl3SFdMk2Rqb2s6vL-fpAIV9KkoKjxl3LBJ0U",
-
   "med 25":
     "https://docs.google.com/spreadsheets/d/1q05QmnAefZSOxccHUV-AI9-WoWS18yNWN1Ufk6A_6NU/edit?resourcekey=&gid=1302446889#gid=1302446889",
   nikhil:
@@ -38,53 +31,35 @@ const mediatorSheets = {
 };
 
 function Formcheck() {
+  const { isApiReady, isAuthenticated, gapi } = useGoogleAuth();
+
   const [mediator, setMediator] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [clickedOrderId, setClickedOrderId] = useState(null);
   const [allOrders, setAllOrders] = useState([]);
+
   const showModal = (message) => {
     setModalMessage(message);
     setTimeout(() => setModalMessage(""), 3000);
   };
-  useEffect(() => {
-    gapi.load("client:auth2", () => {
-      gapi.client
-        .init({
-          apiKey: API_KEY,
-          clientId: CLIENT_ID,
-          discoveryDocs: [DISCOVERY_DOC],
-          scope: SCOPE,
-        })
-        .then(() => {
-          if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
-            setIsAuthenticated(true);
-          }
-        });
-    });
-  }, []);
-
-  const handleLogin = async () => {
-    try {
-      await gapi.auth2.getAuthInstance().signIn();
-      setIsAuthenticated(true);
-    } catch (error) {
-      alert("Login Error: " + error.message);
-    }
-  };
 
   const fetchOrders = useCallback(async () => {
+    if (!isApiReady || !isAuthenticated || !gapi?.client?.sheets) {
+      return;
+    }
+
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
         range: "Sheet1!A2:M",
       });
 
-      const rows = (response.result.values || []).map((row) => {
-        return [...row, ...Array(Math.max(0, 15 - row.length)).fill("")];
-      });
+      const rows = (response.result.values || []).map((row) => [
+        ...row,
+        ...Array(Math.max(0, 15 - row.length)).fill(""),
+      ]);
 
       // 30 days ago
       const thirtyDaysAgo = new Date();
@@ -99,14 +74,14 @@ function Formcheck() {
         }
 
         if (row[9] !== "") return false;
-
         if (!row[1]) return false;
 
         const [month, day, year] = row[1].split("/").map(Number);
-
         const refundDate = new Date(year, month - 1, day);
 
-        return refundDate <= thirtyDaysAgo;
+        return (
+          !Number.isNaN(refundDate.getTime()) && refundDate <= thirtyDaysAgo
+        );
       });
 
       // Count ke liye save
@@ -135,43 +110,65 @@ function Formcheck() {
     } catch (error) {
       alert("Error fetching data: " + error.message);
     }
-  }, [mediator]);
+  }, [mediator, isApiReady, isAuthenticated, gapi]);
 
   const handleChange = (index, field, value) => {
     setOrders((prev) => {
       const updated = [...prev];
-      updated[index][field] = value;
+
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+
       return updated;
     });
   };
 
   const handleUpdateOrder = async (orderData) => {
     if (!orderData) return;
-    if (orderData.form === "wrong" && orderData.buyerRemark === "") {
+
+    if (orderData.form === "wrong" && !orderData.buyerRemark?.trim()) {
       return alert("wrong kyu hai wo likho");
     }
 
-    setLoading(true); // You should define setIsLoading and alert in your component
+    if (!isApiReady || !isAuthenticated || !gapi?.client?.sheets) {
+      return showModal("Google API ready nahi hai. Dobara try karein.");
+    }
+
+    setLoading(true);
+
     try {
       const response = await gapi.client.sheets.spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
-        range: "Sheet1!A2:A", // Only fetching Order IDs
+        range: "Sheet1!A2:M",
       });
 
-      const rows = response.result.values;
-      if (!rows) return alert("No data found.");
+      const rows = response.result.values || [];
+
+      if (!rows.length) {
+        showModal("No data found.");
+        return;
+      }
 
       const rowIndex = rows.findIndex(
         (row) => row[0]?.toString() === orderData.order_id?.toString(),
       );
-      if (rowIndex === -1) return alert("Order ID नहीं मिला ❌❌");
 
-      const actualRowNumber = rowIndex + 2; // Adding 2 because rows start at A2
+      if (rowIndex === -1) {
+        showModal("Order ID नहीं मिला ❌❌");
+        return;
+      }
+
+      const actualRowNumber = rowIndex + 2;
+
+      // Original row se paid_amount preserve karein
+      const existingRow = rows[rowIndex];
 
       const updateResponse =
         await gapi.client.sheets.spreadsheets.values.update({
           spreadsheetId: SHEET_ID,
-          range: `Sheet1!A${actualRowNumber}:M${actualRowNumber}`, // Use backticks for template string
+          range: `Sheet1!A${actualRowNumber}:M${actualRowNumber}`,
           valueInputOption: "USER_ENTERED",
           resource: {
             values: [
@@ -182,9 +179,9 @@ function Formcheck() {
                 orderData.Your_Whatsapp_Number || "",
                 orderData.order_amount || "",
                 orderData.Less_amount || "",
-                "", // paid_amount left blank as per your code
+                existingRow[6] || "",
                 orderData.payment || "",
-                orderData.notes || "",
+                orderData.Notes || "",
                 orderData.form || "",
                 orderData.buyerRemark || "",
                 orderData.timeline || "",
@@ -196,6 +193,7 @@ function Formcheck() {
 
       if (updateResponse.status === 200) {
         showModal("✅ Data update हो गया!");
+        await fetchOrders();
       } else {
         showModal("⚠️ कुछ problem है, Nitesh को message कर लो");
       }
@@ -205,6 +203,7 @@ function Formcheck() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     const savedMediator = localStorage.getItem("mediator");
     const savedOrderId = localStorage.getItem("clickedOrderId");
@@ -217,15 +216,24 @@ function Formcheck() {
       setClickedOrderId(savedOrderId);
     }
   }, []);
+
   useEffect(() => {
-    if (mediator && isAuthenticated) {
+    if (mediator && isApiReady && isAuthenticated) {
       fetchOrders();
     }
-  }, [mediator, isAuthenticated, fetchOrders]);
+  }, [mediator, isApiReady, isAuthenticated, fetchOrders]);
+
   return (
     <div style={{ padding: "2px", position: "relative" }}>
       <h1>Order Filter by Mediator</h1>
-      <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+
+      <div
+        style={{
+          display: "flex",
+          gap: "10px",
+          marginBottom: "10px",
+        }}
+      >
         <select
           value={mediator}
           onChange={(e) => {
@@ -234,6 +242,7 @@ function Formcheck() {
           }}
         >
           <option value="">Select Mediator</option>
+
           {med.map((opt) => {
             const count = allOrders.filter(
               (row) => row[2]?.toLowerCase() === opt.toLowerCase(),
@@ -268,6 +277,7 @@ function Formcheck() {
           </div>
         )}
       </div>
+
       {loading && (
         <div
           style={{
@@ -291,7 +301,7 @@ function Formcheck() {
       )}
 
       {!isAuthenticated ? (
-        <button onClick={handleLogin}>Login with Google</button>
+        <GoogleAuthButtons />
       ) : (
         <table border="1" style={{ borderCollapse: "collapse", width: "100%" }}>
           <thead>
@@ -299,73 +309,73 @@ function Formcheck() {
               <th>Order ID</th>
               <th>Form</th>
               <th>Buyer Message</th>
-
               <th>Update</th>
             </tr>
           </thead>
+
           <tbody>
-            {orders
-              // .filter((order) => order.Mediator === mediator)
-              .map((order, index) => (
-                <tr key={index}>
-                  <td
-                    style={{
-                      maxWidth: "50px",
-                      cursor: "pointer",
-                      border:
-                        order.order_id === clickedOrderId
-                          ? "2px solid red"
-                          : "1px solid #ccc",
-                      background:
-                        order.order_id === clickedOrderId
-                          ? "rgba(255,0,0,0.1)"
-                          : "transparent",
-                      transition: "all 0.3s ease",
-                    }}
-                    onClick={() => {
-                      navigator.clipboard.writeText(order.order_id);
-                      showModal(order.order_id);
-                      setClickedOrderId(order.order_id);
-                      // ✅ localStorage me save
-                      localStorage.setItem("clickedOrderId", order.order_id);
+            {orders.map((order, index) => (
+              <tr key={index}>
+                <td
+                  style={{
+                    maxWidth: "50px",
+                    cursor: "pointer",
+                    border:
+                      order.order_id === clickedOrderId
+                        ? "2px solid red"
+                        : "1px solid #ccc",
+                    background:
+                      order.order_id === clickedOrderId
+                        ? "rgba(255,0,0,0.1)"
+                        : "transparent",
+                    transition: "all 0.3s ease",
+                  }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(order.order_id);
+                    showModal(order.order_id);
+                    setClickedOrderId(order.order_id);
+
+                    // localStorage me save
+                    localStorage.setItem("clickedOrderId", order.order_id);
+                  }}
+                >
+                  {order.order_id}
+                  <div>{dayjs(order.refund_form_date).format("DD-MMM")}</div>
+                </td>
+
+                <td>
+                  <select
+                    value={order.form || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      handleChange(index, "form", value);
                     }}
                   >
-                    {order.order_id}
-                    <div> {dayjs(order.refund_form_date).format("DD-MMM")}</div>
-                  </td>
-                  <td>
-                    <select
-                      value={order.form}
-                      onChange={(e) => {
-                        const value = e.target.value;
+                    <option value="">Status</option>
+                    <option value="ok">Ok</option>
+                    <option value="wrong">Wrong</option>
+                    <option value="notaccess">Not Access</option>
+                  </select>
+                </td>
 
-                        handleChange(index, "form", value);
-                      }}
-                    >
-                      <option value="">Status</option>
-                      <option value="ok">Ok</option>
-                      <option value="wrong">Wrong</option>
-                      <option value="notaccess">Not Access</option>
-                    </select>
-                  </td>
-                  <td style={{ maxWidth: "60px" }}>
-                    <input
-                      style={{ maxWidth: "45px" }}
-                      type="text"
-                      value={order.buyerRemark}
-                      onChange={(e) =>
-                        handleChange(index, "buyerRemark", e.target.value)
-                      }
-                    />
-                  </td>
+                <td style={{ maxWidth: "60px" }}>
+                  <input
+                    style={{ maxWidth: "45px" }}
+                    type="text"
+                    value={order.buyerRemark || ""}
+                    onChange={(e) =>
+                      handleChange(index, "buyerRemark", e.target.value)
+                    }
+                  />
+                </td>
 
-                  <td>
-                    <button onClick={() => handleUpdateOrder(order)}>
-                      Update
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                <td>
+                  <button onClick={() => handleUpdateOrder(order)}>
+                    Update
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       )}
