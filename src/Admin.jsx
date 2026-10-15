@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { useState } from "react";
-import { useGoogleAuth, SHEET_ID } from "./auth/GoogleAuth";
+import { useGoogleAuth, SHEET_ID, GoogleAuthButtons } from "./auth/GoogleAuth";
 import "./App.css";
 import med from "./med";
 import { Link } from "react-router-dom";
@@ -11,14 +11,7 @@ function Admin() {
   const [isLoading, setIsLoading] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
-  const {
-    isApiReady,
-    isAuthenticated,
-    login,
-    logout,
-    gapi,
-    error: googleError,
-  } = useGoogleAuth();
+  const { isAuthenticated, gapi } = useGoogleAuth();
 
   const fetchOrderData = async () => {
     if (!searchId) return showModal("Please enter an Order ID.");
@@ -135,34 +128,11 @@ function Admin() {
   return (
     <div className="admin-container">
       <Link to="/akku">Akku</Link>
-      <h1>
-        Refund Management{" "}
-        <span
-          onClick={logout}
-          style={{
-            backgroundColor: "red",
-            padding: "5px",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          LogOut
-        </span>
-      </h1>
-      {!isAuthenticated ? (
-        <button
-          style={{
-            margin: "10px",
-            width: "90%",
-            display: "flex",
-            justifyContent: "center",
-          }}
-          onClick={login}
-          disabled={!isApiReady}
-        >
-          {isApiReady ? "Login with Google" : "Loading Google API..."}
-        </button>
-      ) : (
+      <h1>Refund Management </h1>
+
+      <GoogleAuthButtons />
+
+      {isAuthenticated && (
         <div>
           <div
             style={{
@@ -181,12 +151,17 @@ function Admin() {
                   fetchOrderData();
                 }
               }}
-              style={{ paddingRight: "40px", width: "100%" }} // Extra padding to prevent text from overlapping button
+              style={{ paddingRight: "40px", width: "100%" }}
             />
+
             <button
               onClick={async () => {
-                const text = await navigator.clipboard.readText(); // Read from clipboard
-                setSearchId(text);
+                try {
+                  const text = await navigator.clipboard.readText();
+                  setSearchId(text.trim());
+                } catch (error) {
+                  showModal("Clipboard access nahi mila.");
+                }
               }}
               style={{
                 position: "absolute",
@@ -201,41 +176,47 @@ function Admin() {
                 borderRadius: "5px",
                 width: "10%",
               }}
+              type="button"
             >
               📋
             </button>
+
             <button
               style={{ width: "20%" }}
               className="search-btn"
               onClick={fetchOrderData}
               disabled={isLoading}
             >
-              Search
+              {isLoading ? "Searching..." : "Search"}
             </button>
           </div>
 
           {modalMessage && <div className="modal">{modalMessage}</div>}
+
           {orderData && (
             <div className="order-details">
               <h3>Order Details:</h3>
+
               <table>
                 <tbody>
                   {Object.entries(orderData).map(([key, value]) => (
                     <tr key={key}>
                       <td>{key}</td>
+
                       <td>
-                        {key === "mediator" || key === "payment" ? (
+                        {key === "Mediator" || key === "payment" ? (
                           <select
-                            value={value}
+                            value={value ?? ""}
                             onChange={(e) =>
-                              setOrderData({
-                                ...orderData,
+                              setOrderData((prev) => ({
+                                ...prev,
                                 [key]: e.target.value,
-                              })
+                              }))
                             }
                           >
                             <option value="">Select {key}</option>
-                            {key === "mediator"
+
+                            {key === "Mediator"
                               ? med.map((opt) => (
                                   <option key={opt} value={opt}>
                                     {opt}
@@ -258,14 +239,16 @@ function Admin() {
                             type={key === "refund_form_date" ? "date" : "text"}
                             value={
                               key === "refund_form_date"
-                                ? dayjs(value).format("YYYY-MM-DD")
-                                : value
+                                ? value
+                                  ? dayjs(value).format("YYYY-MM-DD")
+                                  : ""
+                                : (value ?? "")
                             }
                             onChange={(e) =>
-                              setOrderData({
-                                ...orderData,
+                              setOrderData((prev) => ({
+                                ...prev,
                                 [key]: e.target.value,
-                              })
+                              }))
                             }
                             readOnly={["order_id", "paid_amount"].includes(key)}
                           />
@@ -275,17 +258,19 @@ function Admin() {
                   ))}
                 </tbody>
               </table>
+
               <button
                 className="update-btn"
                 onClick={handleUpdateOrder}
                 disabled={isLoading}
               >
-                Update Order
+                {isLoading ? "Updating..." : "Update Order"}
               </button>
             </div>
           )}
         </div>
       )}
+
       {isLoading && (
         <div className="loading-overlay">
           <div className="spinner"></div>
