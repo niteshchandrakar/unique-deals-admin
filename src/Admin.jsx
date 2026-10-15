@@ -1,53 +1,24 @@
-import { useEffect, useState } from "react";
-import { gapi } from "gapi-script";
 import dayjs from "dayjs";
+import { useState } from "react";
+import { useGoogleAuth, SHEET_ID } from "./auth/GoogleAuth";
 import "./App.css";
 import med from "./med";
 import { Link } from "react-router-dom";
-const CLIENT_ID =
-  "937228397336-i07jo81e4e8os777rel1594n369ohnuk.apps.googleusercontent.com";
-const API_KEY = "AIzaSyDScP5GlWBV1kA8k0cfLK6r7JvRHRqqOJU";
-const SHEET_ID = "1L9LJEj43C54zbd5AJ3HW_ETt0KW1JK6sIh6-jkQSLWQ";
-const DISCOVERY_DOC =
-  "https://sheets.googleapis.com/$discovery/rest?version=v4";
-const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 
 function Admin() {
   const [searchId, setSearchId] = useState("");
   const [orderData, setOrderData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
-  useEffect(() => {
-    const start = () => {
-      gapi.client
-        .init({
-          apiKey: API_KEY,
-          clientId: CLIENT_ID,
-          discoveryDocs: [DISCOVERY_DOC],
-          scope: SCOPE,
-        })
-        .then(() => {
-          const authInstance = gapi.auth2.getAuthInstance();
-          if (authInstance.isSignedIn.get()) {
-            setIsAuthenticated(true); // Persist authentication state
-          }
-        })
-        .catch((error) => showModal("Google API Error: " + error.message));
-    };
-    gapi.load("client:auth2", start);
-  }, []);
-
-  const handleLogin = async () => {
-    try {
-      const authInstance = gapi.auth2.getAuthInstance();
-      await authInstance.signIn();
-      setIsAuthenticated(true);
-    } catch (error) {
-      showModal("Login Error: " + error.message);
-    }
-  };
+  const {
+    isApiReady,
+    isAuthenticated,
+    login,
+    logout,
+    gapi,
+    error: googleError,
+  } = useGoogleAuth();
 
   const fetchOrderData = async () => {
     if (!searchId) return showModal("Please enter an Order ID.");
@@ -167,9 +138,7 @@ function Admin() {
       <h1>
         Refund Management{" "}
         <span
-          onClick={() => {
-            setIsAuthenticated(false);
-          }}
+          onClick={logout}
           style={{
             backgroundColor: "red",
             padding: "5px",
@@ -188,9 +157,10 @@ function Admin() {
             display: "flex",
             justifyContent: "center",
           }}
-          onClick={handleLogin}
+          onClick={login}
+          disabled={!isApiReady}
         >
-          Login with Google
+          {isApiReady ? "Login with Google" : "Loading Google API..."}
         </button>
       ) : (
         <div>
